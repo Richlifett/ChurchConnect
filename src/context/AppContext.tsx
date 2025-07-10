@@ -12,6 +12,17 @@ interface Meeting {
   date: Date;
   participants: number;
   type: 'service' | 'study' | 'prayer' | 'meeting';
+  description?: string;
+  isRecurring: boolean;
+  recurringPattern?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number; // every X days/weeks/months
+    daysOfWeek?: number[]; // for weekly: 0=Sunday, 1=Monday, etc.
+    endDate?: Date;
+    occurrences?: number; // number of occurrences
+  };
+  recurringSeriesId?: string; // links recurring meetings together
+  originalDate?: Date; // for recurring meetings, the original start date
 }
 
 interface PrayerRequest {
@@ -67,14 +78,32 @@ const initialState: AppState = {
       title: 'Sunday Morning Service',
       date: new Date(2024, 11, 15, 10, 0),
       participants: 45,
-      type: 'service'
+      type: 'service',
+      description: 'Weekly worship service with communion',
+      isRecurring: true,
+      recurringPattern: {
+        frequency: 'weekly',
+        interval: 1,
+        daysOfWeek: [0] // Sunday
+      },
+      recurringSeriesId: 'sunday-service',
+      originalDate: new Date(2024, 11, 15, 10, 0)
     },
     {
       id: '2',
       title: 'Wednesday Bible Study',
       date: new Date(2024, 11, 18, 19, 0),
       participants: 12,
-      type: 'study'
+      type: 'study',
+      description: 'Deep dive into the Gospel of John',
+      isRecurring: true,
+      recurringPattern: {
+        frequency: 'weekly',
+        interval: 1,
+        daysOfWeek: [3] // Wednesday
+      },
+      recurringSeriesId: 'wednesday-study',
+      originalDate: new Date(2024, 11, 18, 19, 0)
     }
   ],
   prayerRequests: [

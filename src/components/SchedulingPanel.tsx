@@ -18,6 +18,17 @@ interface Meeting {
   date: Date;
   participants: number;
   type: 'service' | 'study' | 'prayer' | 'meeting';
+  description?: string;
+  isRecurring: boolean;
+  recurringPattern?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number;
+    daysOfWeek?: number[];
+    endDate?: Date;
+    occurrences?: number;
+  };
+  recurringSeriesId?: string;
+  originalDate?: Date;
 }
 
 const meetingTypes = new Map([
@@ -70,31 +81,179 @@ export function SchedulingPanel() {
 
   const NewMeetingForm = () => {
     const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
     const [type, setType] = useState<'service' | 'study' | 'prayer' | 'meeting'>('service');
     const [date, setDate] = useState(format(selectedDate, 'yyyy-MM-dd'));
     const [time, setTime] = useState(format(selectedDate, 'HH:mm'));
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+    const [interval, setInterval] = useState(1);
+    const [selectedDays, setSelectedDays] = useState<number[]>([0]); // Default to Sunday
+    const [endType, setEndType] = useState<'never' | 'date' | 'occurrences'>('never');
+    const [endDate, setEndDate] = useState('');
+    const [occurrences, setOccurrences] = useState(10);
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+      
+      if (!title.trim()) {
+        alert('Please enter a meeting title');
+        return;
+      }
+      
       const [y, m, d] = date.split('-').map(Number);
       const [h, min] = time.split(':').map(Number);
       const meetingDate = new Date(y, m - 1, d, h, min);
 
-      const meeting: Meeting = {
-        id: Date.now().toString(),
-        title,
-        date: meetingDate,
-        participants: 0,
-        type,
-      };
+      if (isRecurring) {
+        // Generate recurring meetings
+        const recurringSeriesId = Date.now().toString();
+        const meetings = generateRecurringMeetings({
+          title,
+          description,
+          type,
+          startDate: meetingDate,
+          frequency,
+          interval,
+          daysOfWeek: frequency === 'weekly' ? selectedDays : undefined,
+          endType,
+          endDate: endType === 'date' ? new Date(endDate) : undefined,
+          occurrences: endType === 'occurrences' ? occurrences : undefined,
+          recurringSeriesId
+        });
+        
+        meetings.forEach(meeting => {
+          dispatch({ type: 'ADD_MEETING', payload: meeting });
+        });
+      } else {
+        // Single meeting
+        const meeting: Meeting = {
+          id: Date.now().toString(),
+          title,
+          description,
+          date: meetingDate,
+          participants: 0,
+          type,
+          isRecurring: false
+        };
+        
+        dispatch({ type: 'ADD_MEETING', payload: meeting });
+      }
 
-      dispatch({ type: 'ADD_MEETING', payload: meeting });
       setShowNewMeeting(false);
+      
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setType('service');
+      setIsRecurring(false);
+      setFrequency('weekly');
+      setInterval(1);
+      setSelectedDays([0]);
+      setEndType('never');
+      setEndDate('');
+      setOccurrences(10);
     };
+
+    const generateRecurringMeetings = (config: {
+      title: string;
+      description: string;
+      type: Meeting['type'];
+      startDate: Date;
+      frequency: 'daily' | 'weekly' | 'monthly';
+      interval: number;
+      daysOfWeek?: number[];
+      endType: 'never' | 'date' | 'occurrences';
+      endDate?: Date;
+      occurrences?: number;
+      recurringSeriesId: string;
+    }): Meeting[] => {
+      const meetings: Meeting[] = [];
+      let currentDate = new Date(config.startDate);
+      let count = 0;
+      const maxOccurrences = config.endType === 'occurrences' ? config.occurrences! : 100; // Limit to 100 if no end
+      
+      while (count < maxOccurrences) {
+        // Check if we've reached the end date
+        if (config.endType === 'date' && config.endDate && currentDate > config.endDate) {
+          break;
+        }
+        
+        // For weekly recurring, check if current day is in selected days
+        if (config.frequency === 'weekly' && config.daysOfWeek) {
+          const dayOfWeek = currentDate.getDay();
+          if (config.daysOfWeek.includes(dayOfWeek)) {
+            meetings.push({
+              id: `${config.recurringSeriesId}-${count}`,
+              title: config.title,
+              description: config.description,
+              date: new Date(currentDate),
+              participants: 0,
+              type: config.type,
+              isRecurring: true,
+              recurringSeriesId: config.recurringSeriesId,
+              originalDate: config.startDate,
+              recurringPattern: {
+                frequency: config.frequency,
+                interval: config.interval,
+                daysOfWeek: config.daysOfWeek,
+                endDate: config.endDate,
+                occurrences: config.occurrences
+              }
+            });
+            count++;
+          }
+          // Move to next day for weekly check
+          currentDate.setDate(currentDate.getDate() + 1);
+        } else {
+          // For daily and monthly
+          meetings.push({
+            id: `${config.recurringSeriesId}-${count}`,
+            title: config.title,
+            description: config.description,
+            date: new Date(currentDate),
+            participants: 0,
+            type: config.type,
+            isRecurring: true,
+            recurringSeriesId: config.recurringSeriesId,
+            originalDate: config.startDate,
+            recurringPattern: {
+              frequency: config.frequency,
+              interval: config.interval,
+              endDate: config.endDate,
+              occurrences: config.occurrences
+            }
+          });
+          count++;
+          
+          // Move to next occurrence
+          if (config.frequency === 'daily') {
+            currentDate.setDate(currentDate.getDate() + config.interval);
+          } else if (config.frequency === 'monthly') {
+            currentDate.setMonth(currentDate.getMonth() + config.interval);
+          }
+        }
+        
+        // Safety check to prevent infinite loops
+        if (count > 1000) break;
+      }
+      
+      return meetings;
+    };
+
+    const handleDayToggle = (day: number) => {
+      setSelectedDays(prev => 
+        prev.includes(day) 
+          ? prev.filter(d => d !== day)
+          : [...prev, day].sort()
+      );
+    };
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Schedule New Meeting</h3>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -106,6 +265,7 @@ export function SchedulingPanel() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter meeting title"
               />
@@ -126,6 +286,19 @@ export function SchedulingPanel() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                rows={3}
+                placeholder="Meeting description (optional)..."
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -153,27 +326,135 @@ export function SchedulingPanel() {
               </div>
             </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              rows={3}
-              placeholder="Meeting description..."
-            />
-          </div>
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  id="recurring"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label htmlFor="recurring" className="ml-2 text-sm font-medium text-gray-700">
+                  Make this a recurring meeting
+                </label>
+              </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="recurring"
-              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            <label htmlFor="recurring" className="ml-2 text-sm text-gray-700">
-              Recurring meeting
-            </label>
-          </div>
+              {isRecurring && (
+                <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Repeat every
+                      </label>
+                      <div className="flex space-x-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={interval}
+                          onChange={(e) => setInterval(parseInt(e.target.value) || 1)}
+                          className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                        />
+                        <select
+                          value={frequency}
+                          onChange={(e) => setFrequency(e.target.value as any)}
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded"
+                        >
+                          <option value="daily">Day(s)</option>
+                          <option value="weekly">Week(s)</option>
+                          <option value="monthly">Month(s)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {frequency === 'weekly' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Repeat on
+                      </label>
+                      <div className="flex space-x-1">
+                        {dayNames.map((day, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleDayToggle(index)}
+                            className={`w-8 h-8 text-xs rounded-full border transition-colors ${
+                              selectedDays.includes(index)
+                                ? 'bg-primary-600 text-white border-primary-600'
+                                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="endType"
+                          value="never"
+                          checked={endType === 'never'}
+                          onChange={(e) => setEndType(e.target.value as any)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Never</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="endType"
+                          value="date"
+                          checked={endType === 'date'}
+                          onChange={(e) => setEndType(e.target.value as any)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">On</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          disabled={endType !== 'date'}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm disabled:bg-gray-100"
+                        />
+                      </label>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="endType"
+                          value="occurrences"
+                          checked={endType === 'occurrences'}
+                          onChange={(e) => setEndType(e.target.value as any)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">After</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={occurrences}
+                          onChange={(e) => setOccurrences(parseInt(e.target.value) || 1)}
+                          disabled={endType !== 'occurrences'}
+                          className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm disabled:bg-gray-100"
+                        />
+                        <span className="text-sm">occurrences</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
           <div className="flex space-x-3 pt-4">
             <button
@@ -309,10 +590,14 @@ export function SchedulingPanel() {
                         className={`p-2 rounded text-xs text-white ${
                           typeInfo?.color || 'bg-gray-500'
                         } cursor-pointer hover:opacity-80 transition-opacity`}
+                        title={meeting.description || meeting.title}
                       >
                         <div className="flex items-center space-x-1">
                           <Icon className="w-3 h-3" />
-                          <span className="truncate">{meeting.title}</span>
+                          <span className="truncate">
+                            {meeting.title}
+                            {meeting.isRecurring && ' ↻'}
+                          </span>
                         </div>
                         <div className="text-white/80 mt-1">
                           {format(meeting.date, 'HH:mm')}
@@ -341,10 +626,22 @@ export function SchedulingPanel() {
                   <Icon className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{meeting.title}</div>
+                  <div className="font-medium text-gray-900">
+                    {meeting.title}
+                    {meeting.isRecurring && (
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                        Recurring
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm text-gray-500">
                     {format(meeting.date, 'MMM dd, yyyy • HH:mm')}
                   </div>
+                  {meeting.description && (
+                    <div className="text-xs text-gray-400 mt-1 truncate">
+                      {meeting.description}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-1 text-sm text-gray-500">
                   <Users className="w-4 h-4" />
