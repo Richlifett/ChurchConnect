@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Users, Plus, Video, Book, Heart, Settings } from 'lucide-react';
-import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
+import {
+  format,
+  addDays,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+} from 'date-fns';
 import { useApp } from '../context/AppContext';
 
 interface Meeting {
@@ -43,6 +52,15 @@ export function SchedulingPanel() {
 
   const weekStart = startOfWeek(selectedDate);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const monthStartDate = startOfWeek(monthStart);
+  const monthEndDate = endOfWeek(monthEnd);
+  const monthDays: Date[] = [];
+  for (let d = monthStartDate; d <= monthEndDate; d = addDays(d, 1)) {
+    monthDays.push(d);
+  }
 
   const getMeetingsForDate = (date: Date) => {
     return state.meetings.filter(meeting =>
@@ -189,7 +207,15 @@ export function SchedulingPanel() {
           </div>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setViewMode(viewMode === 'week' ? 'month' : 'week')}
+              onClick={() => {
+                if (viewMode === 'week') {
+                  setViewMode('month');
+                  setSelectedDate(startOfMonth(selectedDate));
+                } else {
+                  setViewMode('week');
+                  setSelectedDate(startOfWeek(selectedDate));
+                }
+              }}
               className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
             >
               {viewMode === 'week' ? 'Month View' : 'Week View'}
@@ -204,24 +230,44 @@ export function SchedulingPanel() {
           </div>
         </div>
 
-        {/* Week Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setSelectedDate(addWeeks(selectedDate, -1))}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            ←
-          </button>
-          <h3 className="text-lg font-semibold">
-            {format(weekStart, 'MMM dd')} - {format(addDays(weekStart, 6), 'MMM dd, yyyy')}
-          </h3>
-          <button
-            onClick={() => setSelectedDate(addWeeks(selectedDate, 1))}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            →
-          </button>
-        </div>
+        {/* Date Navigation */}
+        {viewMode === 'week' ? (
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSelectedDate(addWeeks(selectedDate, -1))}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              ←
+            </button>
+            <h3 className="text-lg font-semibold">
+              {format(weekStart, 'MMM dd')} - {format(addDays(weekStart, 6), 'MMM dd, yyyy')}
+            </h3>
+            <button
+              onClick={() => setSelectedDate(addWeeks(selectedDate, 1))}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              →
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSelectedDate(addMonths(selectedDate, -1))}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              ←
+            </button>
+            <h3 className="text-lg font-semibold">
+              {format(selectedDate, 'MMMM yyyy')}
+            </h3>
+            <button
+              onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Calendar Grid */}
@@ -233,15 +279,22 @@ export function SchedulingPanel() {
             </div>
           ))}
           
-          {weekDays.map(day => {
+          {(viewMode === 'week' ? weekDays : monthDays).map(day => {
             const meetings = getMeetingsForDate(day);
             const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+            const isCurrentMonth = viewMode === 'month' ? day.getMonth() === selectedDate.getMonth() : true;
             
             return (
               <div key={day.toISOString()} className="bg-white min-h-32 p-2">
-                <div className={`text-sm font-medium mb-2 ${
-                  isToday ? 'text-primary-600' : 'text-gray-700'
-                }`}>
+                <div
+                  className={`text-sm font-medium mb-2 ${
+                    isToday
+                      ? 'text-primary-600'
+                      : isCurrentMonth
+                      ? 'text-gray-700'
+                      : 'text-gray-400'
+                  }`}
+                >
                   {format(day, 'd')}
                 </div>
                 
