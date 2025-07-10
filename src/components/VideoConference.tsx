@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { VideoGrid } from './video/VideoGrid';
+import { ResizableVideoGrid } from './video/ResizableVideoGrid';
 import { VideoControls } from './video/VideoControls';
 import { ParticipantsList } from './video/ParticipantsList';
 import { ScreenShare } from './video/ScreenShare';
 import { VerseDisplay } from './video/VerseDisplay';
+import { VersePreview } from './video/VersePreview';
 import { BiblePopup } from './video/BiblePopup';
 import { useApp } from '../context/AppContext';
 import { webrtcService } from '../services/webrtc';
@@ -14,6 +16,7 @@ export function VideoConference() {
   const [viewMode, setViewMode] = useState<'grid' | 'speaker'>('grid');
   const [showParticipants, setShowParticipants] = useState(false);
   const [showBiblePanel, setShowBiblePanel] = useState(false);
+  const [isVersePreviewMinimized, setIsVersePreviewMinimized] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -132,6 +135,7 @@ export function VideoConference() {
 
   const handleCloseVerseDisplay = () => {
     dispatch({ type: 'STOP_VERSE_SHARING' });
+    setIsVersePreviewMinimized(false);
   };
 
   const handleShareVerse = () => {
@@ -265,19 +269,36 @@ export function VideoConference() {
         <div className="flex-1 relative">
           {state.isScreenSharing ? (
             <ScreenShare />
+          ) : state.isVerseSharing && state.sharedVerse ? (
+            <div className="relative h-full">
+              {/* Show what participants see */}
+              <VerseDisplay 
+                verse={state.sharedVerse} 
+                onClose={handleCloseVerseDisplay}
+              />
+              
+              {/* Show resizable video grid overlay */}
+              <ResizableVideoGrid 
+                viewMode={viewMode} 
+                participants={allParticipants} 
+                localStream={localStream || undefined}
+                isVerseSharing={true}
+              />
+              
+              {/* Show verse preview for the sharer */}
+              <VersePreview
+                verse={state.sharedVerse}
+                onClose={handleCloseVerseDisplay}
+                isMinimized={isVersePreviewMinimized}
+                onToggleMinimize={() => setIsVersePreviewMinimized(!isVersePreviewMinimized)}
+              />
+            </div>
           ) : (
-            <VideoGrid 
+            <ResizableVideoGrid 
               viewMode={viewMode} 
               participants={allParticipants} 
               localStream={localStream || undefined}
-            />
-          )}
-          
-          {/* Verse Display Overlay */}
-          {state.isVerseSharing && state.sharedVerse && (
-            <VerseDisplay 
-              verse={state.sharedVerse} 
-              onClose={handleCloseVerseDisplay}
+              isVerseSharing={false}
             />
           )}
         </div>
