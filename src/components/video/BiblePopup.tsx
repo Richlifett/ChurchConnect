@@ -202,10 +202,10 @@ export function BiblePopup({ onClose, isEmbedded = false }: BiblePopupProps) {
                             e.stopPropagation();
                             handleShareVerse(verseData);
                           }}
-                          className="flex items-center space-x-1 px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-xs"
+                          className="flex items-center space-x-1 px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-xs font-medium"
                         >
                           <Monitor className="w-3 h-3" />
-                          <span>Share</span>
+                          <span>Share to Meeting</span>
                         </button>
                       </div>
                     )}

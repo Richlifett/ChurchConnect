@@ -142,6 +142,19 @@ export function VideoConference() {
     // Close participants panel and show video panel when sharing verse
     setShowParticipants(false);
     setShowVideoPanel(true);
+    
+    // For testing, automatically share a sample verse if none is shared
+    if (!state.isVerseSharing) {
+      const sampleVerse = {
+        id: Date.now().toString(),
+        reference: 'John 3:16',
+        text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
+        translation: 'KJV',
+        sharedBy: 'You',
+        timestamp: new Date()
+      };
+      dispatch({ type: 'SHARE_VERSE', payload: sampleVerse });
+    }
   };
 
   if (!state.isInMeeting) {
