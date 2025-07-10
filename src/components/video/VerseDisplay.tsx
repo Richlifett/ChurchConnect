@@ -18,7 +18,7 @@ interface VerseDisplayProps {
 
 export function VerseDisplay({ verse, onClose }: VerseDisplayProps) {
   return (
-    <div className="h-full w-full bg-gradient-to-br from-primary-50 via-purple-50 to-indigo-50 flex items-center justify-center p-8 overflow-auto">
+    <div className="h-full w-full bg-gradient-to-br from-primary-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4 md:p-8 overflow-auto">
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary-600 to-purple-600 text-white p-6">
@@ -41,8 +41,8 @@ export function VerseDisplay({ verse, onClose }: VerseDisplayProps) {
         </div>
 
         {/* Verse Content */}
-        <div className="p-8">
-          <blockquote className="text-xl md:text-2xl lg:text-3xl leading-relaxed text-gray-800 font-serif text-center mb-8 px-4">
+        <div className="p-6 md:p-8">
+          <blockquote className="text-lg md:text-xl lg:text-2xl xl:text-3xl leading-relaxed text-gray-800 font-serif text-center mb-6 md:mb-8 px-2 md:px-4">
             "{verse.text}"
           </blockquote>
           
@@ -60,7 +60,7 @@ export function VerseDisplay({ verse, onClose }: VerseDisplayProps) {
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-8 py-4 text-center">
+        <div className="bg-gray-50 px-6 md:px-8 py-4 text-center">
           <p className="text-sm text-gray-600">
             This verse is being shared with all meeting participants • Click the X to close
           </p>

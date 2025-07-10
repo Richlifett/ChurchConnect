@@ -116,7 +116,7 @@ export function VideoControls({
       icon: Book,
       label: 'Share Verse',
       active: false,
-      onClick: onShareVerse,
+      onClick: () => onShareVerse && onShareVerse(),
       className: 'bg-purple-600 hover:bg-purple-700'
     },
     {

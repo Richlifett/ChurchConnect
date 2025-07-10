@@ -39,11 +39,6 @@ export function BiblePopup({ onClose, isEmbedded = false }: BiblePopupProps) {
   const maxChapters = selectedBookInfo?.chapters || 1;
 
   const handleShareVerse = (verseData: any) => {
-    if (!state.isInMeeting) {
-      alert('You must be in a meeting to share verses');
-      return;
-    }
-
     const sharedVerse = {
       id: Date.now().toString(),
       reference: `${selectedBook} ${selectedChapter}:${verseData.verse}`,
@@ -55,10 +50,8 @@ export function BiblePopup({ onClose, isEmbedded = false }: BiblePopupProps) {
 
     dispatch({ type: 'SHARE_VERSE', payload: sharedVerse });
     
-    // Only close if it's not embedded
-    if (!isEmbedded) {
-      onClose();
-    }
+    // Always close the Bible popup after sharing
+    onClose();
   };
 
   const highlightText = (text: string) => {

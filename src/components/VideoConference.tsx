@@ -138,22 +138,11 @@ export function VideoConference() {
   };
 
   const handleShareVerse = () => {
-    setShowBiblePanel(true);
-    // Close participants panel and show video panel when sharing verse
-    setShowParticipants(false);
-    setShowVideoPanel(true);
-    
-    // For testing, automatically share a sample verse if none is shared
-    if (!state.isVerseSharing) {
-      const sampleVerse = {
-        id: Date.now().toString(),
-        reference: 'John 3:16',
-        text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
-        translation: 'KJV',
-        sharedBy: 'You',
-        timestamp: new Date()
-      };
-      dispatch({ type: 'SHARE_VERSE', payload: sampleVerse });
+    // Toggle Bible panel for verse selection
+    setShowBiblePanel(!showBiblePanel);
+    // Close participants panel if opening Bible panel
+    if (!showBiblePanel) {
+      setShowParticipants(false);
     }
   };
 
@@ -299,13 +288,13 @@ export function VideoConference() {
         </div>
         
         {/* Side Panels */}
-        {(showParticipants || showBiblePanel || showVideoPanel) && (
+        {(showParticipants || showBiblePanel || (showVideoPanel && state.isVerseSharing)) && (
           <div className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col">
             {showParticipants && (
               <ParticipantsList participants={allParticipants} />
             )}
             
-            {showVideoPanel && state.isVerseSharing && (
+            {(showVideoPanel && state.isVerseSharing) && (
               <VideoSidePanel 
                 participants={allParticipants}
                 localStream={localStream || undefined}
@@ -329,7 +318,10 @@ export function VideoConference() {
                 </div>
                 <div className="flex-1 bg-white">
                   <BiblePopup 
-                    onClose={() => setShowBiblePanel(false)} 
+                    onClose={() => {
+                      setShowBiblePanel(false);
+                      setShowVideoPanel(true);
+                    }} 
                     isEmbedded={true}
                   />
                 </div>
