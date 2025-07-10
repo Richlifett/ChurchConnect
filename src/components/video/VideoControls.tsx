@@ -116,29 +116,29 @@ export function VideoControls({
       icon: Book,
       label: 'Share Verse',
       active: false,
-      onClick: onShareVerse || (() => {}),
+      onClick: onShareVerse,
       className: 'bg-purple-600 hover:bg-purple-700'
     },
     {
       icon: Users,
-      label: 'Breakout Rooms',
+      label: 'Breakout Rooms (coming soon)',
       active: false,
-      onClick: () => {},
-      className: 'bg-gray-600 hover:bg-gray-500'
+      disabled: true,
+      className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
     },
     {
       icon: MessageCircle,
-      label: 'Chat',
+      label: 'Chat (coming soon)',
       active: false,
-      onClick: () => {},
-      className: 'bg-gray-600 hover:bg-gray-500'
+      disabled: true,
+      className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
     },
     {
       icon: Settings,
-      label: 'Settings',
+      label: 'Settings (coming soon)',
       active: false,
-      onClick: () => {},
-      className: 'bg-gray-600 hover:bg-gray-500'
+      disabled: true,
+      className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
     }
   ];
 
@@ -151,6 +151,7 @@ export function VideoControls({
             <button
               key={index}
               onClick={button.onClick}
+              disabled={button.disabled}
               className={clsx(
                 'p-3 rounded-full text-white transition-all duration-200 hover:scale-105',
                 button.className
