@@ -11,12 +11,29 @@ interface Meeting {
   type: 'service' | 'study' | 'prayer' | 'meeting';
 }
 
-const meetingTypes = [
-  { id: 'service', name: 'Sunday Service', icon: Video, color: 'bg-blue-500' },
-  { id: 'study', name: 'Bible Study', icon: Book, color: 'bg-green-500' },
-  { id: 'prayer', name: 'Prayer Meeting', icon: Heart, color: 'bg-purple-500' },
-  { id: 'meeting', name: 'General Meeting', icon: Users, color: 'bg-orange-500' }
-];
+const meetingTypes = new Map([
+  [
+    'service',
+    { id: 'service', name: 'Sunday Service', icon: Video, color: 'bg-blue-500' },
+  ],
+  [
+    'study',
+    { id: 'study', name: 'Bible Study', icon: Book, color: 'bg-green-500' },
+  ],
+  [
+    'prayer',
+    { id: 'prayer', name: 'Prayer Meeting', icon: Heart, color: 'bg-purple-500' },
+  ],
+  [
+    'meeting',
+    {
+      id: 'meeting',
+      name: 'General Meeting',
+      icon: Users,
+      color: 'bg-orange-500',
+    },
+  ],
+]);
 
 export function SchedulingPanel() {
   const { state, dispatch } = useApp();
@@ -85,8 +102,10 @@ export function SchedulingPanel() {
                 onChange={(e) => setType(e.target.value as Meeting['type'])}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                {meetingTypes.map(mt => (
-                  <option key={mt.id} value={mt.id}>{mt.name}</option>
+                {Array.from(meetingTypes.values()).map((mt) => (
+                  <option key={mt.id} value={mt.id}>
+                    {mt.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -227,8 +246,8 @@ export function SchedulingPanel() {
                 </div>
                 
                 <div className="space-y-1">
-                  {meetings.map(meeting => {
-                    const typeInfo = meetingTypes.find(t => t.id === meeting.type);
+                  {meetings.map((meeting) => {
+                    const typeInfo = meetingTypes.get(meeting.type);
                     const Icon = typeInfo?.icon || Video;
                     
                     return (
@@ -259,8 +278,8 @@ export function SchedulingPanel() {
       <div className="border-t border-gray-200 p-4">
         <h3 className="font-semibold text-gray-900 mb-3">Upcoming Meetings</h3>
         <div className="space-y-2">
-          {state.meetings.slice(0, 3).map(meeting => {
-            const typeInfo = meetingTypes.find(t => t.id === meeting.type);
+          {state.meetings.slice(0, 3).map((meeting) => {
+            const typeInfo = meetingTypes.get(meeting.type);
             const Icon = typeInfo?.icon || Video;
             
             return (
