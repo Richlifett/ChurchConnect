@@ -3,6 +3,14 @@ import { Calendar, Clock, Users, Plus, Video, Book, Heart, Settings } from 'luci
 import { format, addDays, startOfWeek, addWeeks } from 'date-fns';
 import { useApp } from '../context/AppContext';
 
+interface Meeting {
+  id: string;
+  title: string;
+  date: Date;
+  participants: number;
+  type: 'service' | 'study' | 'prayer' | 'meeting';
+}
+
 const meetingTypes = [
   { id: 'service', name: 'Sunday Service', icon: Video, color: 'bg-blue-500' },
   { id: 'study', name: 'Bible Study', icon: Book, color: 'bg-green-500' },
@@ -11,7 +19,7 @@ const meetingTypes = [
 ];
 
 export function SchedulingPanel() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showNewMeeting, setShowNewMeeting] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
@@ -25,54 +33,88 @@ export function SchedulingPanel() {
     );
   };
 
-  const NewMeetingForm = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Schedule New Meeting</h3>
-        
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Meeting Title
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter meeting title"
-            />
-          </div>
+  const NewMeetingForm = () => {
+    const [title, setTitle] = useState('');
+    const [type, setType] = useState<'service' | 'study' | 'prayer' | 'meeting'>('service');
+    const [date, setDate] = useState(format(selectedDate, 'yyyy-MM-dd'));
+    const [time, setTime] = useState(format(selectedDate, 'HH:mm'));
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Meeting Type
-            </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-              {meetingTypes.map(type => (
-                <option key={type.id} value={type.id}>{type.name}</option>
-              ))}
-            </select>
-          </div>
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      const [y, m, d] = date.split('-').map(Number);
+      const [h, min] = time.split(':').map(Number);
+      const meetingDate = new Date(y, m - 1, d, h, min);
 
-          <div className="grid grid-cols-2 gap-4">
+      const meeting: Meeting = {
+        id: Date.now().toString(),
+        title,
+        date: meetingDate,
+        participants: 0,
+        type,
+      };
+
+      dispatch({ type: 'ADD_MEETING', payload: meeting });
+      setShowNewMeeting(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Schedule New Meeting</h3>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
+                Meeting Title
               </label>
               <input
-                type="date"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter meeting title"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time
+                Meeting Type
               </label>
-              <input
-                type="time"
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as Meeting['type'])}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
+              >
+                {meetingTypes.map(mt => (
+                  <option key={mt.id} value={mt.id}>{mt.name}</option>
+                ))}
+              </select>
             </div>
-          </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -115,6 +157,7 @@ export function SchedulingPanel() {
       </div>
     </div>
   );
+  };
 
   return (
     <div className="h-full bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -185,7 +228,7 @@ export function SchedulingPanel() {
                 
                 <div className="space-y-1">
                   {meetings.map(meeting => {
-                    const typeInfo = meetingTypes.find(t => t.type === meeting.type);
+                    const typeInfo = meetingTypes.find(t => t.id === meeting.type);
                     const Icon = typeInfo?.icon || Video;
                     
                     return (
@@ -217,7 +260,7 @@ export function SchedulingPanel() {
         <h3 className="font-semibold text-gray-900 mb-3">Upcoming Meetings</h3>
         <div className="space-y-2">
           {state.meetings.slice(0, 3).map(meeting => {
-            const typeInfo = meetingTypes.find(t => t.type === meeting.type);
+            const typeInfo = meetingTypes.find(t => t.id === meeting.type);
             const Icon = typeInfo?.icon || Video;
             
             return (
