@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  ReactNode,
+  useEffect
+} from 'react';
 
 interface Meeting {
   id: string;
@@ -169,7 +175,50 @@ const AppContext = createContext<{
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [state, dispatch] = useReducer(
+    appReducer,
+    initialState,
+    () => {
+      try {
+        const stored = localStorage.getItem('appState');
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<AppState>;
+          return {
+            ...initialState,
+            ...parsed,
+            meetings: (parsed.meetings ?? []).map((m) => ({
+              ...(m as Meeting),
+              date: new Date((m as Meeting).date)
+            })),
+            prayerRequests: (parsed.prayerRequests ?? []).map((p) => ({
+              ...(p as PrayerRequest),
+              date: new Date((p as PrayerRequest).date)
+            })),
+            currentMeeting: parsed.currentMeeting
+              ? {
+                  ...(parsed.currentMeeting as Meeting),
+                  date: new Date((parsed.currentMeeting as Meeting).date)
+                }
+              : null,
+            sharedVerse: parsed.sharedVerse
+              ? {
+                  ...(parsed.sharedVerse as SharedVerse),
+                  timestamp: new Date((parsed.sharedVerse as SharedVerse).timestamp)
+                }
+              : null
+          } as AppState;
+        }
+      } catch (err) {
+        console.error('Failed to parse stored app state', err);
+      }
+      return initialState;
+    }
+  );
+
+  // Persist meetings and prayer requests changes
+  useEffect(() => {
+    localStorage.setItem('appState', JSON.stringify(state));
+  }, [state.meetings, state.prayerRequests]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
