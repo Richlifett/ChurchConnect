@@ -28,6 +28,31 @@ class BibleApiService {
   private readonly ESV_API_BASE = 'https://api.esv.org/v3';
   private readonly ESV_API_KEY = 'IP'; // Using the public IP key for demo
 
+  private cache: Record<string, BiblePassage | BibleVerse> = {};
+
+  constructor() {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('bibleApiCache');
+      if (saved) {
+        try {
+          this.cache = JSON.parse(saved);
+        } catch {
+          this.cache = {};
+        }
+      }
+    }
+  }
+
+  private saveCache() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('bibleApiCache', JSON.stringify(this.cache));
+      } catch (error) {
+        console.error('Failed to persist Bible API cache', error);
+      }
+    }
+  }
+
   // Available translations
   public readonly translations = [
     { id: 'kjv', name: 'King James Version', code: 'kjv' },
@@ -108,18 +133,24 @@ class BibleApiService {
   ];
 
   async getPassage(book: string, chapter: number, translation: string = 'kjv'): Promise<BiblePassage> {
+    const key = `passage:${book}:${chapter}:${translation}`;
+    const cached = this.cache[key] as BiblePassage | undefined;
+    if (cached) {
+      return cached;
+    }
+
     try {
       const reference = `${book} ${chapter}`;
       const url = `${this.BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translation}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
-      return {
+
+      const passage: BiblePassage = {
         reference: data.reference,
         verses: data.verses,
         text: data.text,
@@ -127,30 +158,47 @@ class BibleApiService {
         translation_name: data.translation_name,
         translation_note: data.translation_note || ''
       };
+
+      this.cache[key] = passage;
+      this.saveCache();
+
+      return passage;
     } catch (error) {
       console.error('Error fetching Bible passage:', error);
-      // Fallback to sample data
-      return this.getFallbackPassage(book, chapter, translation);
+      const fallback = this.getFallbackPassage(book, chapter, translation);
+      this.cache[key] = fallback;
+      return fallback;
     }
   }
 
   async getVerse(book: string, chapter: number, verse: number, translation: string = 'kjv'): Promise<BibleVerse> {
+    const key = `verse:${book}:${chapter}:${verse}:${translation}`;
+    const cached = this.cache[key] as BibleVerse | undefined;
+    if (cached) {
+      return cached;
+    }
+
     try {
       const reference = `${book} ${chapter}:${verse}`;
       const url = `${this.BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translation}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
-      return data.verses[0];
+      const verseData: BibleVerse = data.verses[0];
+
+      this.cache[key] = verseData;
+      this.saveCache();
+
+      return verseData;
     } catch (error) {
       console.error('Error fetching Bible verse:', error);
-      // Fallback to sample data
-      return this.getFallbackVerse(book, chapter, verse);
+      const fallback = this.getFallbackVerse(book, chapter, verse);
+      this.cache[key] = fallback;
+      return fallback;
     }
   }
 
