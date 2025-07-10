@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 import clsx from 'clsx';
 
 export function PrayerWall() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'urgent' | 'thanksgiving'>('all');
@@ -15,77 +15,117 @@ export function PrayerWall() {
     request.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const NewRequestForm = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Share Prayer Request</h3>
-        
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prayer Title
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="What can we pray for?"
-            />
-          </div>
+  const NewRequestForm = () => {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('general');
+    const [anonymous, setAnonymous] = useState(false);
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              rows={4}
-              placeholder="Share details about your prayer request..."
-            />
-          </div>
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-              <option value="general">General Prayer</option>
-              <option value="healing">Healing</option>
-              <option value="guidance">Guidance</option>
-              <option value="thanksgiving">Thanksgiving</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
+      const newRequest = {
+        id: Date.now().toString(),
+        title,
+        description,
+        category,
+        anonymous,
+        author: anonymous ? 'Anonymous' : 'You',
+        date: new Date(),
+        prayers: 0
+      };
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="anonymous"
-              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            <label htmlFor="anonymous" className="ml-2 text-sm text-gray-700">
-              Submit anonymously
-            </label>
-          </div>
+      dispatch({ type: 'ADD_PRAYER_REQUEST', payload: newRequest });
 
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowNewRequest(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              Share Request
-            </button>
-          </div>
-        </form>
+      setTitle('');
+      setDescription('');
+      setCategory('general');
+      setAnonymous(false);
+      setShowNewRequest(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Share Prayer Request</h3>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prayer Title
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="What can we pray for?"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                rows={4}
+                placeholder="Share details about your prayer request..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="general">General Prayer</option>
+                <option value="healing">Healing</option>
+                <option value="guidance">Guidance</option>
+                <option value="thanksgiving">Thanksgiving</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="anonymous"
+                checked={anonymous}
+                onChange={(e) => setAnonymous(e.target.checked)}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <label htmlFor="anonymous" className="ml-2 text-sm text-gray-700">
+                Submit anonymously
+              </label>
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowNewRequest(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Share Request
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="h-full bg-white rounded-2xl shadow-xl overflow-hidden">
