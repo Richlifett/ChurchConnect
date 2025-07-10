@@ -270,7 +270,7 @@ export function VideoConference() {
           {state.isScreenSharing ? (
             <ScreenShare />
           ) : state.isVerseSharing && state.sharedVerse ? (
-            <div className="h-full overflow-auto">
+            <div className="h-full w-full overflow-auto bg-white">
               <VerseDisplay 
                 verse={state.sharedVerse} 
                 onClose={handleCloseVerseDisplay}

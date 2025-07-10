@@ -18,7 +18,7 @@ interface VerseDisplayProps {
 
 export function VerseDisplay({ verse, onClose }: VerseDisplayProps) {
   return (
-    <div className="h-full bg-gradient-to-br from-primary-50 via-purple-50 to-indigo-50 flex items-center justify-center p-8">
+    <div className="min-h-full w-full bg-gradient-to-br from-primary-50 via-purple-50 to-indigo-50 flex items-center justify-center p-8">
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary-600 to-purple-600 text-white p-6">
