@@ -83,7 +83,7 @@ export function ChatPanel() {
         content: verse.text,
         timestamp: new Date(),
         type: 'verse',
-        verseReference: `${verse.book_name} ${verse.chapter}:${verse.verse} (${verse.translation_id.toUpperCase()})`
+        verseReference: `${verse.book_name} ${verse.chapter}:${verse.verse} (KJV)`
       };
       setMessages(prev => [...prev, verseMessage]);
     } catch (err) {
