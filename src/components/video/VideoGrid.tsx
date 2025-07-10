@@ -80,7 +80,7 @@ function VideoTile({
           await videoElement.play();
         } catch (error) {
           // Ignore AbortError which occurs during HMR/page reloads
-          if (error instanceof Error && error.name !== 'AbortError') {
+          if (error instanceof Error && error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
             console.warn('Video play failed:', error.message);
           }
         }
@@ -93,7 +93,7 @@ function VideoTile({
 
     // Cleanup function to handle component unmounting
     return () => {
-      if (videoElement.srcObject) {
+      if (videoElement && videoElement.srcObject) {
         videoElement.pause();
         videoElement.srcObject = null;
       }

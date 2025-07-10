@@ -48,7 +48,16 @@ class BibleApiService {
       try {
         localStorage.setItem('bibleApiCache', JSON.stringify(this.cache));
       } catch (error) {
-        console.error('Failed to persist Bible API cache', error);
+        console.warn('Failed to persist Bible API cache:', error);
+        // Clear cache if it's too large
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+          this.cache = {};
+          try {
+            localStorage.removeItem('bibleApiCache');
+          } catch (removeError) {
+            console.warn('Failed to clear Bible API cache:', removeError);
+          }
+        }
       }
     }
   }

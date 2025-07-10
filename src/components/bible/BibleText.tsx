@@ -57,6 +57,17 @@ export function BibleText({ translation, book, chapter, searchTerm, isSharedView
       // You could add a toast notification here
     } catch (err) {
       console.error('Failed to copy verse:', err);
+      // Fallback for browsers that don't support clipboard API
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (fallbackErr) {
+        console.error('Fallback copy also failed:', fallbackErr);
+      }
     }
   };
 

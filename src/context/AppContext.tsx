@@ -217,7 +217,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Persist meetings and prayer requests changes
   useEffect(() => {
-    localStorage.setItem('appState', JSON.stringify(state));
+    try {
+      localStorage.setItem('appState', JSON.stringify(state));
+    } catch (error) {
+      console.warn('Failed to persist app state to localStorage:', error);
+    }
   }, [state.meetings, state.prayerRequests]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

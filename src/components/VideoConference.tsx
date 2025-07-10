@@ -92,7 +92,16 @@ export function VideoConference() {
     try {
       if (state.isScreenSharing) {
         // Stop screen sharing - restore camera
-        if (localStream) {
+        const currentStream = webrtcService.getLocalStream();
+        if (currentStream) {
+          // Get fresh camera stream
+          const cameraStream = await webrtcService.initializeMedia({
+            video: true,
+            audio: true
+          });
+          await webrtcService.replaceVideoTrack(cameraStream);
+          setLocalStream(cameraStream);
+        } else if (localStream) {
           await webrtcService.replaceVideoTrack(localStream);
           setLocalStream(webrtcService.getLocalStream());
         }

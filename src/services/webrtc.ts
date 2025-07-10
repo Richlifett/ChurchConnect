@@ -158,7 +158,11 @@ class WebRTCService {
     // Replace video track for all peer connections
     for (const peerConnection of this.peers.values()) {
       try {
-        const sender = peerConnection.peer._pc?.getSenders().find(
+        // Check if peer connection exists and has getSenders method
+        const pc = (peerConnection.peer as any)._pc;
+        if (!pc || typeof pc.getSenders !== 'function') continue;
+        
+        const sender = pc.getSenders().find(
           s => s.track && s.track.kind === 'video'
         );
         if (sender) {
@@ -264,19 +268,35 @@ class WebRTCService {
       // Create a stream from the canvas
       const stream = canvas.captureStream(30);
       
-      // Add an audio track (silent)
-      const audioContext = new AudioContext();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      gainNode.gain.value = 0; // Silent
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      const audioStream = audioContext.createMediaStreamDestination();
-      oscillator.connect(audioStream);
-      oscillator.start();
-      
-      stream.addTrack(audioStream.stream.getAudioTracks()[0]);
+      // Add an audio track (silent) with proper cleanup
+      try {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0; // Silent
+        oscillator.connect(gainNode);
+        
+        const audioStream = audioContext.createMediaStreamDestination();
+        oscillator.connect(audioStream);
+        oscillator.start();
+        
+        const audioTrack = audioStream.stream.getAudioTracks()[0];
+        if (audioTrack) {
+          stream.addTrack(audioTrack);
+        }
+        
+        // Clean up audio context after a delay to prevent memory leaks
+        setTimeout(() => {
+          try {
+            oscillator.stop();
+            audioContext.close();
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        }, 1000);
+      } catch (audioError) {
+        console.warn('Failed to create audio track for simulated stream:', audioError);
+      }
       
       // Simulate receiving this stream
       this.onStreamReceived?.(peerId, stream);
