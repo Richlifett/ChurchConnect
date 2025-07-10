@@ -266,14 +266,16 @@ export function VideoConference() {
 
       {/* Main Content */}
       <div className="flex-1 flex relative">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative bg-white">
           {state.isScreenSharing ? (
             <ScreenShare />
           ) : state.isVerseSharing && state.sharedVerse ? (
-            <VerseDisplay 
-              verse={state.sharedVerse} 
-              onClose={handleCloseVerseDisplay}
-            />
+            <div className="h-full overflow-auto">
+              <VerseDisplay 
+                verse={state.sharedVerse} 
+                onClose={handleCloseVerseDisplay}
+              />
+            </div>
           ) : (
             <VideoGrid 
               viewMode={viewMode} 
