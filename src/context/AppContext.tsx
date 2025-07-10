@@ -12,6 +12,10 @@ interface PrayerRequest {
   id: string;
   title: string;
   description: string;
+  /** optional categorization for filtering */
+  category?: string;
+  /** flag indicating the request was submitted anonymously */
+  anonymous?: boolean;
   author: string;
   date: Date;
   prayers: number;
