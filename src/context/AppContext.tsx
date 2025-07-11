@@ -25,18 +25,6 @@ interface Meeting {
   originalDate?: Date; // for recurring meetings, the original start date
 }
 
-interface PrayerRequest {
-  id: string;
-  title: string;
-  description: string;
-  /** optional categorization for filtering */
-  category?: string;
-  /** flag indicating the request was submitted anonymously */
-  anonymous?: boolean;
-  author: string;
-  date: Date;
-  prayers: number;
-}
 
 interface SharedVerse {
   id: string;
@@ -49,7 +37,6 @@ interface SharedVerse {
 
 interface AppState {
   meetings: Meeting[];
-  prayerRequests: PrayerRequest[];
   currentMeeting: Meeting | null;
   isInMeeting: boolean;
   isMuted: boolean;
@@ -66,7 +53,6 @@ type AppAction =
   | { type: 'TOGGLE_MUTE' }
   | { type: 'TOGGLE_VIDEO' }
   | { type: 'TOGGLE_SCREEN_SHARE' }
-  | { type: 'ADD_PRAYER_REQUEST'; payload: PrayerRequest }
   | { type: 'ADD_MEETING'; payload: Meeting }
   | { type: 'SHARE_VERSE'; payload: SharedVerse }
   | { type: 'STOP_VERSE_SHARING' };
@@ -104,24 +90,6 @@ const initialState: AppState = {
       },
       recurringSeriesId: 'wednesday-study',
       originalDate: new Date(2024, 11, 18, 19, 0)
-    }
-  ],
-  prayerRequests: [
-    {
-      id: '1',
-      title: 'Healing for Sarah',
-      description: 'Please pray for Sarah\'s recovery from surgery. She\'s scheduled for a procedure next week.',
-      author: 'John Smith',
-      date: new Date(2024, 11, 10),
-      prayers: 23
-    },
-    {
-      id: '2',
-      title: 'Mission Trip Safety',
-      description: 'Our youth group is traveling to Mexico next month. Pray for safe travels and open hearts.',
-      author: 'Pastor Mike',
-      date: new Date(2024, 11, 12),
-      prayers: 31
     }
   ],
   currentMeeting: null,
@@ -169,11 +137,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         isVerseSharing: state.isScreenSharing ? state.isVerseSharing : false,
         sharedVerse: state.isScreenSharing ? state.sharedVerse : null
       };
-    case 'ADD_PRAYER_REQUEST':
-      return {
-        ...state,
-        prayerRequests: [...state.prayerRequests, action.payload]
-      };
     case 'ADD_MEETING':
       return {
         ...state,
@@ -219,10 +182,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
               ...(m as Meeting),
               date: new Date((m as Meeting).date)
             })),
-            prayerRequests: (parsed.prayerRequests ?? []).map((p) => ({
-              ...(p as PrayerRequest),
-              date: new Date((p as PrayerRequest).date)
-            })),
             currentMeeting: parsed.currentMeeting
               ? {
                   ...(parsed.currentMeeting as Meeting),
@@ -244,14 +203,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // Persist meetings and prayer requests changes
+  // Persist meetings changes
   useEffect(() => {
     try {
       localStorage.setItem('appState', JSON.stringify(state));
     } catch (error) {
       console.warn('Failed to persist app state to localStorage:', error);
     }
-  }, [state.meetings, state.prayerRequests]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.meetings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

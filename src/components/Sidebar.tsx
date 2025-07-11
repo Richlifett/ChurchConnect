@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, Book, MessageCircle, Calendar, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Video, Book, MessageCircle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ActiveView } from '../App';
 import clsx from 'clsx';
 
@@ -15,7 +15,6 @@ const menuItems = [
   { id: 'bible' as ActiveView, label: 'Bible Study', icon: Book },
   { id: 'chat' as ActiveView, label: 'Chat & Discussion', icon: MessageCircle },
   { id: 'schedule' as ActiveView, label: 'Schedule', icon: Calendar },
-  { id: 'prayer' as ActiveView, label: 'Prayer Wall', icon: Heart },
 ];
 
 export function Sidebar({ activeView, setActiveView, collapsed, setCollapsed }: SidebarProps) {
