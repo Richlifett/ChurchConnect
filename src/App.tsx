@@ -4,11 +4,10 @@ import { VideoConference } from './components/VideoConference';
 import { BibleViewer } from './components/BibleViewer';
 import { ChatPanel } from './components/ChatPanel';
 import { SchedulingPanel } from './components/SchedulingPanel';
-import { PrayerWall } from './components/PrayerWall';
 import { Header } from './components/Header';
 import { AppProvider } from './context/AppContext';
 
-export type ActiveView = 'video' | 'bible' | 'chat' | 'schedule' | 'prayer';
+export type ActiveView = 'video' | 'bible' | 'chat' | 'schedule';
 
 function App() {
   const [activeView, setActiveView] = useState<ActiveView>('video');
@@ -24,8 +23,6 @@ function App() {
         return <ChatPanel />;
       case 'schedule':
         return <SchedulingPanel />;
-      case 'prayer':
-        return <PrayerWall />;
       default:
         return <VideoConference />;
     }
