@@ -14,6 +14,8 @@ export interface MediaSettings {
 class WebRTCService {
   private localStream: MediaStream | null = null;
   private peers: Map<string, PeerConnection> = new Map();
+  private animationFrameIds: Map<string, number> = new Map();
+  private audioContexts: Map<string, AudioContext> = new Map();
   private mediaSettings: MediaSettings = { video: true, audio: true };
   
   // Event callbacks
@@ -201,6 +203,21 @@ class WebRTCService {
     if (peerConnection) {
       peerConnection.peer.destroy();
       this.peers.delete(peerId);
+      const frameId = this.animationFrameIds.get(peerId);
+      if (typeof frameId === 'number') {
+        cancelAnimationFrame(frameId);
+        this.animationFrameIds.delete(peerId);
+      }
+
+      const audioCtx = this.audioContexts.get(peerId);
+      if (audioCtx) {
+        try {
+          audioCtx.close();
+        } catch {
+          // ignore
+        }
+        this.audioContexts.delete(peerId);
+      }
     }
   }
 
@@ -209,6 +226,20 @@ class WebRTCService {
       peerConnection.peer.destroy();
     }
     this.peers.clear();
+
+    for (const frameId of this.animationFrameIds.values()) {
+      cancelAnimationFrame(frameId);
+    }
+    this.animationFrameIds.clear();
+
+    for (const audioCtx of this.audioContexts.values()) {
+      try {
+        audioCtx.close();
+      } catch {
+        // ignore
+      }
+    }
+    this.audioContexts.clear();
 
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
@@ -248,26 +279,34 @@ class WebRTCService {
       canvas.width = 640;
       canvas.height = 480;
       const ctx = canvas.getContext('2d');
-      
+
       if (ctx) {
-        // Draw a simple animated background
+        // Draw a simple animated background throttled to reduce CPU usage
+        const fpsInterval = 1000 / 15; // ~15fps
+        let lastTime = 0;
         const animate = () => {
-          ctx.fillStyle = `hsl(${Date.now() / 50 % 360}, 50%, 50%)`;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          ctx.fillStyle = 'white';
-          ctx.font = '24px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText(`Participant ${peerId}`, canvas.width / 2, canvas.height / 2);
-          
-          requestAnimationFrame(animate);
+          const now = performance.now();
+          if (now - lastTime >= fpsInterval) {
+            lastTime = now;
+            ctx.fillStyle = `hsl(${Date.now() / 50 % 360}, 50%, 50%)`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'white';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Participant ${peerId}`, canvas.width / 2, canvas.height / 2);
+          }
+
+          const id = requestAnimationFrame(animate);
+          this.animationFrameIds.set(peerId, id);
         };
-        animate();
+        const id = requestAnimationFrame(animate);
+        this.animationFrameIds.set(peerId, id);
       }
 
       // Create a stream from the canvas
       const stream = canvas.captureStream(30);
-      
+
       // Add an audio track (silent) with proper cleanup
       try {
         const audioContext = new AudioContext();
@@ -275,25 +314,16 @@ class WebRTCService {
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0; // Silent
         oscillator.connect(gainNode);
-        
+
         const audioStream = audioContext.createMediaStreamDestination();
         oscillator.connect(audioStream);
         oscillator.start();
-        
+
         const audioTrack = audioStream.stream.getAudioTracks()[0];
         if (audioTrack) {
           stream.addTrack(audioTrack);
         }
-        
-        // Clean up audio context after a delay to prevent memory leaks
-        setTimeout(() => {
-          try {
-            oscillator.stop();
-            audioContext.close();
-          } catch (e) {
-            // Ignore cleanup errors
-          }
-        }, 1000);
+        this.audioContexts.set(peerId, audioContext);
       } catch (audioError) {
         console.warn('Failed to create audio track for simulated stream:', audioError);
       }
