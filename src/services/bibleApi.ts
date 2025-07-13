@@ -257,11 +257,11 @@ class BibleApiService {
     }
   }
 
-  async searchVerses(query: string, translation: string = 'kjv'): Promise<SearchResult[]> {
+  async searchVerses(query: string): Promise<SearchResult[]> {
     try {
       // For demo purposes, we'll simulate search results
       // In a real implementation, you'd use a proper search API
-      const searchResults = await this.simulateSearch(query, translation);
+      const searchResults = await this.simulateSearch(query);
       return searchResults;
     } catch (error) {
       console.error('Error searching verses:', error);
@@ -269,7 +269,7 @@ class BibleApiService {
     }
   }
 
-  private async simulateSearch(query: string, translation: string): Promise<SearchResult[]> {
+  private async simulateSearch(query: string): Promise<SearchResult[]> {
     // Simulate search results based on common queries
     const commonSearches: { [key: string]: SearchResult[] } = {
       'love': [

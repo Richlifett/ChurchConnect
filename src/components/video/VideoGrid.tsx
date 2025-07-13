@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from 'react';
-import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import React from 'react';
 import clsx from 'clsx';
 import { VideoTile } from './VideoTile';
 

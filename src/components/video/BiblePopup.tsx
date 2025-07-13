@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Book, Search, Monitor, ChevronDown } from 'lucide-react';
-import { bibleApi, BiblePassage } from '../../services/bibleApi';
+import { X, Book, Search, Monitor } from 'lucide-react';
+import { bibleApi, BiblePassage, BibleVerse } from '../../services/bibleApi';
 import { useApp } from '../../context/AppContext';
 import clsx from 'clsx';
 
@@ -10,7 +10,7 @@ interface BiblePopupProps {
 }
 
 export function BiblePopup({ onClose, isEmbedded = false }: BiblePopupProps) {
-  const { state, dispatch } = useApp();
+  const { dispatch } = useApp();
   const [selectedTranslation, setSelectedTranslation] = useState('kjv');
   const [selectedBook, setSelectedBook] = useState('John');
   const [selectedChapter, setSelectedChapter] = useState(3);
@@ -38,7 +38,7 @@ export function BiblePopup({ onClose, isEmbedded = false }: BiblePopupProps) {
   const selectedBookInfo = bibleApi.books.find(book => book.name === selectedBook);
   const maxChapters = selectedBookInfo?.chapters || 1;
 
-  const handleShareVerse = (verseData: any) => {
+  const handleShareVerse = (verseData: BibleVerse) => {
     const sharedVerse = {
       id: Date.now().toString(),
       reference: `${selectedBook} ${selectedChapter}:${verseData.verse}`,

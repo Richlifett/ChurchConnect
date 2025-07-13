@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, VideoOff } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Participant {

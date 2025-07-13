@@ -1,10 +1,7 @@
 import React from 'react';
-import { Church, Settings, User, Bell, HelpCircle, X, Calendar, MessageCircle, Heart, Users } from 'lucide-react';
-import { format } from 'date-fns';
-import { useApp } from '../context/AppContext';
+import { Church, Settings, User, Bell, HelpCircle, X, Calendar, MessageCircle, Heart } from 'lucide-react';
 
 export function Header() {
-  const { state } = useApp();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [notifications, setNotifications] = React.useState([
     {

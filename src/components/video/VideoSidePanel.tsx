@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Video, VideoOff, Users, X } from 'lucide-react';
+import { Mic, MicOff, VideoOff, Users, X } from 'lucide-react';
 import { VideoTile } from './VideoTile';
 
 interface Participant {
