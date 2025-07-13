@@ -36,10 +36,39 @@ node - <<'SERVER'
 const { Server } = require('socket.io');
 const io = new Server(3001, { cors: { origin: '*' } });
 io.on('connection', (socket) => {
-  socket.on('message', (msg) => socket.broadcast.emit('message', msg));
+  console.log('Client connected:', socket.id);
+
+  socket.on('private-message', ({ targetId, ...msg }) => {
+    socket.to(targetId).emit('private-message', msg);
+  });
+
+  socket.on('message', (msg) => io.emit('message', msg));
 });
 SERVER
 ```
+
+The server prints each participant's `socket.id` when they connect. Use these IDs
+to target private messages. You can also read your own ID on the client via the
+`socket.id` property of the Socket.IO client instance.
+
+To test private chats:
+
+1. Open the app in two browser tabs so two clients connect.
+2. Note the socket IDs from the server logs.
+3. In one tab's developer console run:
+
+   ```js
+   const { chatService } = await import('/src/services/chat');
+   chatService['socket']?.emit('private-message', {
+     targetId: '<other-id>',
+     id: Date.now().toString(),
+     sender: 'You',
+     text: 'Hello privately',
+     timestamp: new Date()
+   });
+   ```
+
+The message only appears in the tab whose ID matches `targetId`.
 
 ## Contributing
 1. Fork this repository and create a new branch for your feature or bug fix.
