@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { VideoConference } from './components/VideoConference';
-import { SchedulingPanel } from './components/SchedulingPanel';
+const VideoConference = React.lazy(
+  () => import('./components/VideoConference')
+);
+const SchedulingPanel = React.lazy(
+  () => import('./components/SchedulingPanel')
+);
 import { Header } from './components/Header';
 import { AppProvider } from './context/AppContext';
 
@@ -33,11 +37,15 @@ function App() {
             collapsed={sidebarCollapsed}
             setCollapsed={setSidebarCollapsed}
           />
-          <main className={`flex-1 transition-all duration-300 ${
-            sidebarCollapsed ? 'ml-16' : 'ml-64'
-          }`}>
+          <main
+            className={`flex-1 transition-all duration-300 ${
+              sidebarCollapsed ? 'ml-16' : 'ml-64'
+            }`}
+          >
             <div className="h-full p-6">
-              {renderActiveView()}
+              <Suspense fallback={<div>Loading...</div>}>
+                {renderActiveView()}
+              </Suspense>
             </div>
           </main>
         </div>
