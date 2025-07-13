@@ -1,10 +1,10 @@
 import React, { Suspense, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 const VideoConference = React.lazy(
-  () => import('./components/VideoConference')
+  () => import('./components/VideoConference').then(module => ({ default: module.VideoConference }))
 );
 const SchedulingPanel = React.lazy(
-  () => import('./components/SchedulingPanel')
+  () => import('./components/SchedulingPanel').then(module => ({ default: module.SchedulingPanel }))
 );
 import { Header } from './components/Header';
 import { AppProvider } from './context/AppContext';
