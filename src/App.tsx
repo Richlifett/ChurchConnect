@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { VideoConference } from './components/VideoConference';
-import { BibleViewer } from './components/BibleViewer';
-import { ChatPanel } from './components/ChatPanel';
 import { SchedulingPanel } from './components/SchedulingPanel';
 import { Header } from './components/Header';
 import { AppProvider } from './context/AppContext';
 
-export type ActiveView = 'video' | 'bible' | 'chat' | 'schedule';
+export type ActiveView = 'video' | 'schedule';
 
 function App() {
   const [activeView, setActiveView] = useState<ActiveView>('video');
@@ -17,10 +15,6 @@ function App() {
     switch (activeView) {
       case 'video':
         return <VideoConference />;
-      case 'bible':
-        return <BibleViewer />;
-      case 'chat':
-        return <ChatPanel />;
       case 'schedule':
         return <SchedulingPanel />;
       default:

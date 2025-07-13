@@ -1,5 +1,5 @@
 import React from 'react';
-import { Church, Settings, User, Bell, HelpCircle, X, Calendar, MessageCircle, Heart, Users } from 'lucide-react';
+import { Church, Settings, User, Bell, HelpCircle, X, Calendar, Heart, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { useApp } from '../context/AppContext';
 
@@ -24,15 +24,6 @@ export function Header() {
       timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
       read: false,
       icon: Heart
-    },
-    {
-      id: '3',
-      type: 'chat',
-      title: 'Message from Pastor Mike',
-      message: 'Welcome to our online Bible study session!',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      read: true,
-      icon: MessageCircle
     },
     {
       id: '4',
@@ -151,7 +142,6 @@ export function Header() {
                             <div className={`p-2 rounded-lg ${
                               notification.type === 'meeting' ? 'bg-blue-100 text-blue-600' :
                               notification.type === 'prayer' ? 'bg-purple-100 text-purple-600' :
-                              notification.type === 'chat' ? 'bg-green-100 text-green-600' :
                               'bg-gray-100 text-gray-600'
                             }`}>
                               <Icon className="w-4 h-4" />

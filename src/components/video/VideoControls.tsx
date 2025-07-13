@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Video, VideoOff, Monitor, Phone, Users, Settings, MessageCircle, Book } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor, Phone, Users, Settings, Book } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ScreenShareMenu } from './ScreenShareMenu';
 import clsx from 'clsx';
@@ -122,13 +122,6 @@ export function VideoControls({
     {
       icon: Users,
       label: 'Breakout Rooms (coming soon)',
-      active: false,
-      disabled: true,
-      className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
-    },
-    {
-      icon: MessageCircle,
-      label: 'Chat (coming soon)',
       active: false,
       disabled: true,
       className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
