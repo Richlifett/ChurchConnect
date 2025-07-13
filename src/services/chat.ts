@@ -14,10 +14,21 @@ class ChatService {
       };
       this.onMessage?.(msg);
     });
+    this.socket.on('privateMessage', (data: ChatMessage) => {
+      const msg: ChatMessage = {
+        ...data,
+        timestamp: new Date(data.timestamp)
+      };
+      this.onMessage?.(msg);
+    });
   }
 
   sendMessage(message: ChatMessage) {
     this.socket?.emit('message', message);
+  }
+
+  sendPrivateMessage(recipientId: string, message: ChatMessage) {
+    this.socket?.emit('privateMessage', { ...message, recipientId });
   }
 
   disconnect() {

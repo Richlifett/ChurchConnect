@@ -40,6 +40,7 @@ export interface ChatMessage {
   sender: string;
   text: string;
   timestamp: Date;
+  recipientId?: string | null;
 }
 
 interface AppState {

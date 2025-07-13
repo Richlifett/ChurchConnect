@@ -10,6 +10,7 @@ interface ChatPanelProps {
 export function ChatPanel({ onClose }: ChatPanelProps) {
   const { state, dispatch } = useApp();
   const [text, setText] = useState('');
+  const [recipientId, setRecipientId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -22,9 +23,14 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       id: Date.now().toString(),
       sender: 'You',
       text: text.trim(),
-      timestamp: new Date()
+      timestamp: new Date(),
+      recipientId
     };
-    chatService.sendMessage(msg);
+    if (recipientId) {
+      chatService.sendPrivateMessage(recipientId, msg);
+    } else {
+      chatService.sendMessage(msg);
+    }
     dispatch({ type: 'SEND_MESSAGE', payload: msg });
     setText('');
   };
@@ -56,6 +62,20 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         <div ref={messagesEndRef} />
       </div>
       <div className="p-3 border-t border-gray-700 flex items-center space-x-2">
+        <select
+          value={recipientId ?? ''}
+          onChange={(e) =>
+            setRecipientId(e.target.value ? e.target.value : null)
+          }
+          className="bg-gray-600 text-white rounded p-2 text-sm focus:outline-none"
+        >
+          <option value="">Everyone</option>
+          {state.participants.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           value={text}
