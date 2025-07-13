@@ -10,14 +10,16 @@ interface VideoControlsProps {
   onToggleMute?: () => void;
   onScreenShare?: () => void;
   onShareVerse?: () => void;
+  onToggleChat?: () => void;
 }
 
-export function VideoControls({ 
-  onLeaveMeeting, 
-  onToggleVideo, 
-  onToggleMute, 
+export function VideoControls({
+  onLeaveMeeting,
+  onToggleVideo,
+  onToggleMute,
   onScreenShare,
-  onShareVerse
+  onShareVerse,
+  onToggleChat
 }: VideoControlsProps) {
   const { state, dispatch } = useApp();
   const [showScreenShareMenu, setShowScreenShareMenu] = useState(false);
@@ -128,10 +130,10 @@ export function VideoControls({
     },
     {
       icon: MessageCircle,
-      label: 'Chat (coming soon)',
+      label: 'Chat',
       active: false,
-      disabled: true,
-      className: 'bg-gray-600 hover:bg-gray-500 opacity-50 cursor-not-allowed'
+      onClick: () => onToggleChat && onToggleChat(),
+      className: 'bg-gray-600 hover:bg-gray-500'
     },
     {
       icon: Settings,

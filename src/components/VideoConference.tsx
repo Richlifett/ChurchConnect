@@ -6,8 +6,10 @@ import { VideoSidePanel } from './video/VideoSidePanel';
 import { ScreenShare } from './video/ScreenShare';
 import { VerseDisplay } from './video/VerseDisplay';
 import { BiblePopup } from './video/BiblePopup';
+import { ChatPanel } from './video/ChatPanel';
 import { useApp } from '../context/AppContext';
 import { webrtcService } from '../services/webrtc';
+import { chatService } from '../services/chat';
 import { Play, Users, Grid3x3, User, AlertCircle, X, Book } from 'lucide-react';
 
 export function VideoConference() {
@@ -16,6 +18,7 @@ export function VideoConference() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [showBiblePanel, setShowBiblePanel] = useState(false);
   const [showVideoPanel, setShowVideoPanel] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -61,7 +64,12 @@ export function VideoConference() {
       // Join the meeting
       const meeting = state.meetings[0];
       dispatch({ type: 'JOIN_MEETING', payload: meeting });
-      
+
+      chatService.onMessage = (msg) => {
+        dispatch({ type: 'RECEIVE_MESSAGE', payload: msg });
+      };
+      chatService.connect(meeting.id);
+
       // Simulate joining WebRTC meeting
       await webrtcService.simulateJoinMeeting(meeting.id);
       
@@ -77,6 +85,8 @@ export function VideoConference() {
     webrtcService.disconnectAll();
     setLocalStream(null);
     setShowBiblePanel(false);
+    setShowChatPanel(false);
+    chatService.disconnect();
     dispatch({ type: 'LEAVE_MEETING' });
   };
 
@@ -143,6 +153,14 @@ export function VideoConference() {
     // Close participants panel if opening Bible panel
     if (!showBiblePanel) {
       setShowParticipants(false);
+    }
+  };
+
+  const handleToggleChatPanel = () => {
+    setShowChatPanel(!showChatPanel);
+    if (!showChatPanel) {
+      setShowParticipants(false);
+      setShowBiblePanel(false);
     }
   };
 
@@ -288,7 +306,7 @@ export function VideoConference() {
         </div>
         
         {/* Side Panels */}
-        {(showParticipants || showBiblePanel || (showVideoPanel && state.isVerseSharing)) && (
+        {(showParticipants || showBiblePanel || showChatPanel || (showVideoPanel && state.isVerseSharing)) && (
           <div className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col">
             {showParticipants && (
               <ParticipantsList participants={allParticipants} />
@@ -327,17 +345,22 @@ export function VideoConference() {
                 </div>
               </div>
             )}
+
+            {showChatPanel && (
+              <ChatPanel onClose={() => setShowChatPanel(false)} />
+            )}
           </div>
         )}
       </div>
 
       {/* Controls */}
-      <VideoControls 
+      <VideoControls
         onLeaveMeeting={handleLeaveMeeting}
         onToggleVideo={handleToggleVideo}
         onToggleMute={handleToggleMute}
         onScreenShare={handleScreenShare}
         onShareVerse={handleShareVerse}
+        onToggleChat={handleToggleChatPanel}
       />
     </div>
   );
