@@ -149,22 +149,42 @@ class BibleApiService {
     }
 
     try {
-      const reference = `${book} ${chapter}`;
-      const url = `${this.BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translation}`;
+      // Format the reference properly for the API
+      const reference = `${book.replace(/\s+/g, '')} ${chapter}`;
+      const encodedReference = encodeURIComponent(reference);
+      const url = `${this.BIBLE_API_BASE}/${encodedReference}`;
+      
+      // Add translation parameter only for supported translations
+      const supportedTranslations = ['kjv', 'web'];
+      const finalUrl = supportedTranslations.includes(translation.toLowerCase()) 
+        ? `${url}?translation=${translation}`
+        : url;
 
-      const response = await fetch(url);
+      const response = await fetch(finalUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
       if (!response.ok) {
+        console.warn(`Bible API returned ${response.status} for ${reference}, using fallback`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // Validate the response structure
+      if (!data || !data.verses || !Array.isArray(data.verses)) {
+        throw new Error('Invalid response format from Bible API');
+      }
 
       const passage: BiblePassage = {
-        reference: data.reference,
+        reference: data.reference || `${book} ${chapter}`,
         verses: data.verses,
-        text: data.text,
-        translation_id: data.translation_id,
-        translation_name: data.translation_name,
+        text: data.text || '',
+        translation_id: data.translation_id || translation,
+        translation_name: data.translation_name || translation.toUpperCase(),
         translation_note: data.translation_note || ''
       };
 
@@ -173,7 +193,7 @@ class BibleApiService {
 
       return passage;
     } catch (error) {
-      console.error('Error fetching Bible passage:', error);
+      console.warn('Bible API unavailable, using offline content:', error instanceof Error ? error.message : 'Unknown error');
       const fallback = this.getFallbackPassage(book, chapter, translation);
       this.cache[key] = fallback;
       return fallback;
@@ -280,8 +300,10 @@ class BibleApiService {
   }
 
   private getFallbackPassage(book: string, chapter: number, translation: string): BiblePassage {
-    // Sample John 3 passage for fallback
-    if (book.toLowerCase() === 'john' && chapter === 3) {
+    const bookLower = book.toLowerCase().replace(/\s+/g, '');
+    
+    // Expanded fallback content for common passages
+    if (bookLower === 'john' && chapter === 3) {
       return {
         reference: 'John 3',
         verses: [
@@ -308,22 +330,120 @@ class BibleApiService {
             chapter: 3,
             verse: 16,
             text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.'
+          },
+          {
+            book_name: 'John',
+            chapter: 3,
+            verse: 17,
+            text: 'For God sent not his Son into the world to condemn the world; but that the world through him might be saved.'
           }
         ],
-        text: 'John 3:1-16 passage text...',
+        text: 'John 3:1-17 - The conversation with Nicodemus about being born again and God\'s love for the world.',
         translation_id: translation,
         translation_name: translation.toUpperCase(),
-        translation_note: ''
+        translation_note: 'Offline content'
+      };
+    }
+    
+    if (bookLower === 'psalms' && chapter === 23) {
+      return {
+        reference: 'Psalms 23',
+        verses: [
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 1,
+            text: 'The LORD is my shepherd; I shall not want.'
+          },
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 2,
+            text: 'He maketh me to lie down in green pastures: he leadeth me beside the still waters.'
+          },
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 3,
+            text: 'He restoreth my soul: he leadeth me in the paths of righteousness for his name\'s sake.'
+          },
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 4,
+            text: 'Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.'
+          },
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 5,
+            text: 'Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.'
+          },
+          {
+            book_name: 'Psalms',
+            chapter: 23,
+            verse: 6,
+            text: 'Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever.'
+          }
+        ],
+        text: 'Psalms 23 - The Lord is my shepherd psalm.',
+        translation_id: translation,
+        translation_name: translation.toUpperCase(),
+        translation_note: 'Offline content'
+      };
+    }
+    
+    if (bookLower === 'matthew' && chapter === 5) {
+      return {
+        reference: 'Matthew 5',
+        verses: [
+          {
+            book_name: 'Matthew',
+            chapter: 5,
+            verse: 3,
+            text: 'Blessed are the poor in spirit: for theirs is the kingdom of heaven.'
+          },
+          {
+            book_name: 'Matthew',
+            chapter: 5,
+            verse: 4,
+            text: 'Blessed are they that mourn: for they shall be comforted.'
+          },
+          {
+            book_name: 'Matthew',
+            chapter: 5,
+            verse: 14,
+            text: 'Ye are the light of the world. A city that is set on an hill cannot be hid.'
+          },
+          {
+            book_name: 'Matthew',
+            chapter: 5,
+            verse: 16,
+            text: 'Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.'
+          }
+        ],
+        text: 'Matthew 5 - The Beatitudes and teachings from the Sermon on the Mount.',
+        translation_id: translation,
+        translation_name: translation.toUpperCase(),
+        translation_note: 'Offline content'
       };
     }
 
+    // Generic fallback for any book/chapter
     return {
       reference: `${book} ${chapter}`,
-      verses: [],
-      text: 'Passage not available in offline mode.',
+      verses: [
+        {
+          book_name: book,
+          chapter: chapter,
+          verse: 1,
+          text: `${book} ${chapter} content is not available in offline mode. Please check your internet connection and try again.`
+        }
+      ],
+      text: `${book} ${chapter} - Content not available offline.`,
       translation_id: translation,
       translation_name: translation.toUpperCase(),
-      translation_note: ''
+      translation_note: 'Offline mode - limited content available'
     };
   }
 
