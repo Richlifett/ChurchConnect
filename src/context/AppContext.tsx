@@ -55,6 +55,7 @@ interface AppState {
   sharedVerse: SharedVerse | null;
   isVerseSharing: boolean;
   messages: ChatMessage[];
+  localParticipantId: string;
 }
 
 type AppAction =
@@ -112,7 +113,8 @@ const initialState: AppState = {
   participants: [],
   sharedVerse: null,
   isVerseSharing: false,
-  messages: []
+  messages: [],
+  localParticipantId: '1'
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -230,7 +232,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 timestamp: new Date(msg.timestamp),
                 recipientId: msg.recipientId ?? null
               } as ChatMessage;
-            })
+            }),
+            localParticipantId:
+              parsed.localParticipantId ?? initialState.localParticipantId
           } as AppState;
         }
       } catch (err) {

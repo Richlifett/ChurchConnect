@@ -32,13 +32,22 @@ export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
     setText('');
   };
 
+  const visibleMessages = state.messages.filter(
+    (m) =>
+      m.recipientId === null ||
+      m.recipientId === state.localParticipantId ||
+      m.recipient === 'You' ||
+      m.sender === 'You'
+  );
+
   const filteredMessages = recipient
-    ? state.messages.filter(
+    ? visibleMessages.filter(
         (m) =>
           (m.sender === 'You' && m.recipient === recipient) ||
-          (m.sender === recipient && m.recipient === 'You')
+          (m.sender === recipient &&
+            (m.recipient === 'You' || m.recipientId === state.localParticipantId))
       )
-    : state.messages;
+    : visibleMessages;
 
   return (
     <div className="flex-1 flex flex-col">
