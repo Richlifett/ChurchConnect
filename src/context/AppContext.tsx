@@ -40,6 +40,7 @@ export interface ChatMessage {
   sender: string;
   text: string;
   timestamp: Date;
+  recipientId: string | null;
 }
 
 interface AppState {
@@ -170,12 +171,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SEND_MESSAGE':
       return {
         ...state,
-        messages: [...state.messages, action.payload]
+        messages: [
+          ...state.messages,
+          { ...action.payload, recipientId: action.payload.recipientId ?? null }
+        ]
       };
     case 'RECEIVE_MESSAGE':
       return {
         ...state,
-        messages: [...state.messages, action.payload]
+        messages: [
+          ...state.messages,
+          { ...action.payload, recipientId: action.payload.recipientId ?? null }
+        ]
       };
     default:
       return state;
@@ -215,10 +222,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   timestamp: new Date((parsed.sharedVerse as SharedVerse).timestamp)
                 }
               : null,
-            messages: (parsed.messages ?? []).map((m) => ({
-              ...(m as ChatMessage),
-              timestamp: new Date((m as ChatMessage).timestamp)
-            }))
+            messages: (parsed.messages ?? []).map((m) => {
+              const msg = m as Partial<ChatMessage> & { timestamp: string };
+              return {
+                ...msg,
+                timestamp: new Date(msg.timestamp),
+                recipientId: msg.recipientId ?? null
+              } as ChatMessage;
+            })
           } as AppState;
         }
       } catch (err) {
