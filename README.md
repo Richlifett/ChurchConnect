@@ -25,6 +25,22 @@ The compiled files are created in `dist/`. You can preview the production build 
 npm run preview
 ```
 
+## Chat
+The video conference includes a simple chat panel powered by Socket.IO. When a meeting starts the client connects to `http://localhost:3001` to send and receive messages.
+
+To test chat locally you can run a minimal Socket.IO server:
+
+```bash
+npm install socket.io
+node - <<'SERVER'
+const { Server } = require('socket.io');
+const io = new Server(3001, { cors: { origin: '*' } });
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => socket.broadcast.emit('message', msg));
+});
+SERVER
+```
+
 ## Contributing
 1. Fork this repository and create a new branch for your feature or bug fix.
 2. Install dependencies with `npm install` and run `npm run lint` before committing.

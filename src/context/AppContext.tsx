@@ -35,6 +35,13 @@ interface SharedVerse {
   timestamp: Date;
 }
 
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: Date;
+}
+
 interface AppState {
   meetings: Meeting[];
   currentMeeting: Meeting | null;
@@ -45,6 +52,7 @@ interface AppState {
   participants: { id: string; name: string; isMuted: boolean; isVideoOn: boolean }[];
   sharedVerse: SharedVerse | null;
   isVerseSharing: boolean;
+  messages: ChatMessage[];
 }
 
 type AppAction =
@@ -55,7 +63,9 @@ type AppAction =
   | { type: 'TOGGLE_SCREEN_SHARE' }
   | { type: 'ADD_MEETING'; payload: Meeting }
   | { type: 'SHARE_VERSE'; payload: SharedVerse }
-  | { type: 'STOP_VERSE_SHARING' };
+  | { type: 'STOP_VERSE_SHARING' }
+  | { type: 'SEND_MESSAGE'; payload: ChatMessage }
+  | { type: 'RECEIVE_MESSAGE'; payload: ChatMessage };
 
 const initialState: AppState = {
   meetings: [
@@ -99,7 +109,8 @@ const initialState: AppState = {
   isScreenSharing: false,
   participants: [],
   sharedVerse: null,
-  isVerseSharing: false
+  isVerseSharing: false,
+  messages: []
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -156,6 +167,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
         sharedVerse: null,
         isVerseSharing: false
       };
+    case 'SEND_MESSAGE':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload]
+      };
+    case 'RECEIVE_MESSAGE':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload]
+      };
     default:
       return state;
   }
@@ -193,7 +214,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   ...(parsed.sharedVerse as SharedVerse),
                   timestamp: new Date((parsed.sharedVerse as SharedVerse).timestamp)
                 }
-              : null
+              : null,
+            messages: (parsed.messages ?? []).map((m) => ({
+              ...(m as ChatMessage),
+              timestamp: new Date((m as ChatMessage).timestamp)
+            }))
           } as AppState;
         }
       } catch (err) {
@@ -203,14 +228,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // Persist meetings changes
+  // Persist state changes
   useEffect(() => {
     try {
       localStorage.setItem('appState', JSON.stringify(state));
     } catch (error) {
       console.warn('Failed to persist app state to localStorage:', error);
     }
-  }, [state.meetings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.meetings, state.messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
