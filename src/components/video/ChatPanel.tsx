@@ -22,7 +22,8 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       id: Date.now().toString(),
       sender: 'You',
       text: text.trim(),
-      timestamp: new Date()
+      timestamp: new Date(),
+      recipientId: null
     };
     chatService.sendMessage(msg);
     dispatch({ type: 'SEND_MESSAGE', payload: msg });

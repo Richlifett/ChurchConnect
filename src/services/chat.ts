@@ -10,7 +10,8 @@ class ChatService {
     this.socket.on('message', (data: ChatMessage) => {
       const msg: ChatMessage = {
         ...data,
-        timestamp: new Date(data.timestamp)
+        timestamp: new Date((data as any).timestamp),
+        recipientId: (data as any).recipientId ?? null
       };
       this.onMessage?.(msg);
     });
