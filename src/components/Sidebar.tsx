@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, Book, MessageCircle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Video, MessageCircle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ActiveView } from '../App';
 import clsx from 'clsx';
 
@@ -12,7 +12,6 @@ interface SidebarProps {
 
 const menuItems = [
   { id: 'video' as ActiveView, label: 'Video Conference', icon: Video },
-  { id: 'bible' as ActiveView, label: 'Bible Study', icon: Book },
   { id: 'chat' as ActiveView, label: 'Chat & Discussion', icon: MessageCircle },
   { id: 'schedule' as ActiveView, label: 'Schedule', icon: Calendar },
 ];
