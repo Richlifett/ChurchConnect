@@ -1,4 +1,6 @@
 // Bible API service using Bible API (bible-api.com) and ESV API as fallback
+import { xmlBibleParser } from './xmlBibleParser';
+
 export interface BibleVerse {
   book_name: string;
   chapter: number;
@@ -31,6 +33,10 @@ class BibleApiService {
   private cache: Record<string, BiblePassage | BibleVerse> = {};
 
   constructor() {
+    // Initialize with XML parser data
+    this.translations = xmlBibleParser.getAvailableTranslations();
+    this.books = xmlBibleParser.getAvailableBooks();
+    
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem('bibleApiCache');
       if (saved) {
@@ -149,54 +155,64 @@ class BibleApiService {
     }
 
     try {
-      // Format the reference properly for the API
-      const reference = `${book.replace(/\s+/g, '')} ${chapter}`;
-      const encodedReference = encodeURIComponent(reference);
-      const url = `${this.BIBLE_API_BASE}/${encodedReference}`;
-      
-      // Add translation parameter only for supported translations
-      const supportedTranslations = ['kjv', 'web'];
-      const finalUrl = supportedTranslations.includes(translation.toLowerCase()) 
-        ? `${url}?translation=${translation}`
-        : url;
-
-      const response = await fetch(finalUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        console.warn(`Bible API returned ${response.status} for ${reference}, using fallback`);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Validate the response structure
-      if (!data || !data.verses || !Array.isArray(data.verses)) {
-        throw new Error('Invalid response format from Bible API');
-      }
-
-      const passage: BiblePassage = {
-        reference: data.reference || `${book} ${chapter}`,
-        verses: data.verses,
-        text: data.text || '',
-        translation_id: data.translation_id || translation,
-        translation_name: data.translation_name || translation.toUpperCase(),
-        translation_note: data.translation_note || ''
-      };
-
-      this.cache[key] = passage;
+      // Try XML parser first for speed
+      const xmlResult = await xmlBibleParser.getPassage(translation, book, chapter);
+      this.cache[key] = xmlResult;
       this.saveCache();
+      return xmlResult;
+    } catch (xmlError) {
+      console.warn('XML Bible not available, trying online API:', xmlError);
+      
+      try {
+        // Format the reference properly for the API
+        const reference = `${book.replace(/\s+/g, '')} ${chapter}`;
+        const encodedReference = encodeURIComponent(reference);
+        const url = `${this.BIBLE_API_BASE}/${encodedReference}`;
+        
+        // Add translation parameter only for supported translations
+        const supportedTranslations = ['kjv', 'web'];
+        const finalUrl = supportedTranslations.includes(translation.toLowerCase()) 
+          ? `${url}?translation=${translation}`
+          : url;
 
-      return passage;
-    } catch (error) {
-      console.warn('Bible API unavailable, using offline content:', error instanceof Error ? error.message : 'Unknown error');
-      const fallback = this.getFallbackPassage(book, chapter, translation);
-      this.cache[key] = fallback;
-      return fallback;
+        const response = await fetch(finalUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          console.warn(`Bible API returned ${response.status} for ${reference}, using fallback`);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Validate the response structure
+        if (!data || !data.verses || !Array.isArray(data.verses)) {
+          throw new Error('Invalid response format from Bible API');
+        }
+
+        const passage: BiblePassage = {
+          reference: data.reference || `${book} ${chapter}`,
+          verses: data.verses,
+          text: data.text || '',
+          translation_id: data.translation_id || translation,
+          translation_name: data.translation_name || translation.toUpperCase(),
+          translation_note: data.translation_note || ''
+        };
+
+        this.cache[key] = passage;
+        this.saveCache();
+
+        return passage;
+      } catch (apiError) {
+        console.warn('Bible API unavailable, using offline content:', apiError instanceof Error ? apiError.message : 'Unknown error');
+        const fallback = this.getFallbackPassage(book, chapter, translation);
+        this.cache[key] = fallback;
+        return fallback;
+      }
     }
   }
 
@@ -208,26 +224,36 @@ class BibleApiService {
     }
 
     try {
-      const reference = `${book} ${chapter}:${verse}`;
-      const url = `${this.BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translation}`;
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const verseData: BibleVerse = data.verses[0];
-
-      this.cache[key] = verseData;
+      // Try XML parser first
+      const xmlResult = await xmlBibleParser.getVerse(translation, book, chapter, verse);
+      this.cache[key] = xmlResult;
       this.saveCache();
+      return xmlResult;
+    } catch (xmlError) {
+      console.warn('XML verse not available, trying online API:', xmlError);
+      
+      try {
+        const reference = `${book} ${chapter}:${verse}`;
+        const url = `${this.BIBLE_API_BASE}/${encodeURIComponent(reference)}?translation=${translation}`;
 
-      return verseData;
-    } catch (error) {
-      console.error('Error fetching Bible verse:', error);
-      const fallback = this.getFallbackVerse(book, chapter, verse);
-      this.cache[key] = fallback;
-      return fallback;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const verseData: BibleVerse = data.verses[0];
+
+        this.cache[key] = verseData;
+        this.saveCache();
+
+        return verseData;
+      } catch (apiError) {
+        console.error('Error fetching Bible verse:', apiError);
+        const fallback = this.getFallbackVerse(book, chapter, verse);
+        this.cache[key] = fallback;
+        return fallback;
+      }
     }
   }
 
