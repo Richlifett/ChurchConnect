@@ -19,6 +19,7 @@ export function VideoConference() {
   const [showBiblePanel, setShowBiblePanel] = useState(false);
   const [showVideoPanel, setShowVideoPanel] = useState(false);
   const [showChatPanel, setShowChatPanel] = useState(false);
+  const [chatRecipient, setChatRecipient] = useState<string | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -86,6 +87,7 @@ export function VideoConference() {
     setLocalStream(null);
     setShowBiblePanel(false);
     setShowChatPanel(false);
+    setChatRecipient(null);
     chatService.disconnect();
     dispatch({ type: 'LEAVE_MEETING' });
   };
@@ -161,6 +163,7 @@ export function VideoConference() {
     if (!showChatPanel) {
       setShowParticipants(false);
       setShowBiblePanel(false);
+      setChatRecipient(null);
     }
   };
 
@@ -309,7 +312,14 @@ export function VideoConference() {
         {(showParticipants || showBiblePanel || showChatPanel || (showVideoPanel && state.isVerseSharing)) && (
           <div className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col">
             {showParticipants && (
-              <ParticipantsList participants={allParticipants} />
+              <ParticipantsList
+                participants={allParticipants}
+                onParticipantClick={(p) => {
+                  setChatRecipient(p.name);
+                  setShowChatPanel(true);
+                  setShowParticipants(false);
+                }}
+              />
             )}
             
             {(showVideoPanel && state.isVerseSharing) && (
@@ -347,7 +357,13 @@ export function VideoConference() {
             )}
 
             {showChatPanel && (
-              <ChatPanel onClose={() => setShowChatPanel(false)} />
+              <ChatPanel
+                recipient={chatRecipient || undefined}
+                onClose={() => {
+                  setShowChatPanel(false);
+                  setChatRecipient(null);
+                }}
+              />
             )}
           </div>
         )}

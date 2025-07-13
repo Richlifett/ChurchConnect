@@ -5,22 +5,24 @@ import { chatService } from '../../services/chat';
 
 interface ChatPanelProps {
   onClose: () => void;
+  recipient?: string;
 }
 
-export function ChatPanel({ onClose }: ChatPanelProps) {
+export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
   const { state, dispatch } = useApp();
   const [text, setText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [state.messages]);
+  }, [state.messages, recipient]);
 
   const send = () => {
     if (!text.trim()) return;
     const msg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'You',
+      recipient,
       text: text.trim(),
       timestamp: new Date()
     };
@@ -29,12 +31,22 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
     setText('');
   };
 
+  const filteredMessages = recipient
+    ? state.messages.filter(
+        (m) =>
+          (m.sender === 'You' && m.recipient === recipient) ||
+          (m.sender === recipient && m.recipient === 'You')
+      )
+    : state.messages;
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <MessageCircle className="w-5 h-5 text-white" />
-          <h3 className="text-white font-semibold">Chat</h3>
+          <h3 className="text-white font-semibold">
+            {recipient ? `Chat with ${recipient}` : 'Chat'}
+          </h3>
         </div>
         <button
           onClick={onClose}
@@ -45,7 +57,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-700/20">
-        {state.messages.map((m) => (
+        {filteredMessages.map((m) => (
           <div key={m.id} className="text-sm text-white">
             <div className="text-xs text-gray-400 mb-1">
               {m.sender} - {m.timestamp.toLocaleTimeString()}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Video, VideoOff, MoreVertical, Crown } from 'lucide-react';
+import { Mic, MicOff, VideoOff, MoreVertical, Crown } from 'lucide-react';
 
 interface Participant {
   id: string;
@@ -10,9 +10,10 @@ interface Participant {
 
 interface ParticipantsListProps {
   participants: Participant[];
+  onParticipantClick?: (participant: Participant) => void;
 }
 
-export function ParticipantsList({ participants }: ParticipantsListProps) {
+export function ParticipantsList({ participants, onParticipantClick }: ParticipantsListProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-700">
@@ -21,7 +22,11 @@ export function ParticipantsList({ participants }: ParticipantsListProps) {
       
       <div className="flex-1 overflow-y-auto">
         {participants.map((participant, index) => (
-          <div key={participant.id} className="p-3 hover:bg-gray-700 transition-colors">
+          <div
+            key={participant.id}
+            className="p-3 hover:bg-gray-700 transition-colors cursor-pointer"
+            onClick={() => onParticipantClick?.(participant)}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-purple-500 rounded-full flex items-center justify-center">
