@@ -7,18 +7,25 @@ class ChatService {
 
   connect(meetingId: string) {
     this.socket = io('http://localhost:3001', { query: { meetingId } });
-    this.socket.on('message', (data: ChatMessage) => {
+    const handler = (data: ChatMessage) => {
       const msg: ChatMessage = {
         ...data,
         timestamp: new Date((data as any).timestamp),
         recipientId: (data as any).recipientId ?? null
       };
       this.onMessage?.(msg);
-    });
+    };
+
+    this.socket.on('message', handler);
+    this.socket.on('private-message', handler);
   }
 
   sendMessage(message: ChatMessage) {
     this.socket?.emit('message', message);
+  }
+
+  sendPrivateMessage(message: ChatMessage) {
+    this.socket?.emit('private-message', message);
   }
 
   disconnect() {
