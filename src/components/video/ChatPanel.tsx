@@ -3,40 +3,55 @@ import { MessageCircle, Send, X } from 'lucide-react';
 import { useApp, ChatMessage } from '../../context/AppContext';
 import { chatService } from '../../services/chat';
 
-interface ChatPanelProps {
-  onClose: () => void;
-  recipient?: string;
+interface Participant {
+  id: string;
+  name: string;
+  isMuted: boolean;
+  isVideoOn: boolean;
 }
 
-export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
+interface ChatPanelProps {
+  onClose: () => void;
+  participants: Participant[];
+  initialRecipient?: Participant;
+}
+
+export function ChatPanel({ onClose, participants, initialRecipient }: ChatPanelProps) {
   const { state, dispatch } = useApp();
   const [text, setText] = useState('');
+  const [recipientId, setRecipientId] = useState<string>(initialRecipient?.id ?? '');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedRecipient = participants.find((p) => p.id === recipientId);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [state.messages, recipient]);
+  }, [state.messages, recipientId]);
 
   const send = () => {
     if (!text.trim()) return;
     const msg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'You',
-      recipient,
+      recipient: selectedRecipient?.name,
       text: text.trim(),
       timestamp: new Date(),
-      recipientId: null
+      recipientId: recipientId || null
     };
-    chatService.sendMessage(msg);
+
+    if (recipientId) {
+      chatService.sendPrivateMessage(msg);
+    } else {
+      chatService.sendMessage(msg);
+    }
     dispatch({ type: 'SEND_MESSAGE', payload: msg });
     setText('');
   };
 
-  const filteredMessages = recipient
+  const filteredMessages = recipientId
     ? state.messages.filter(
         (m) =>
-          (m.sender === 'You' && m.recipient === recipient) ||
-          (m.sender === recipient && m.recipient === 'You')
+          m.recipientId === recipientId || m.sender === selectedRecipient?.name
       )
     : state.messages;
 
@@ -46,7 +61,7 @@ export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
         <div className="flex items-center space-x-2">
           <MessageCircle className="w-5 h-5 text-white" />
           <h3 className="text-white font-semibold">
-            {recipient ? `Chat with ${recipient}` : 'Chat'}
+            {selectedRecipient ? `Chat with ${selectedRecipient.name}` : 'Chat'}
           </h3>
         </div>
         <button
@@ -69,6 +84,19 @@ export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
         <div ref={messagesEndRef} />
       </div>
       <div className="p-3 border-t border-gray-700 flex items-center space-x-2">
+        <select
+          aria-label="Recipient"
+          value={recipientId}
+          onChange={(e) => setRecipientId(e.target.value)}
+          className="bg-gray-600 text-white rounded p-2 text-sm focus:outline-none"
+        >
+          <option value="">Everyone</option>
+          {participants.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           value={text}
@@ -78,6 +106,7 @@ export function ChatPanel({ onClose, recipient }: ChatPanelProps) {
           placeholder="Type a message"
         />
         <button
+          aria-label="Send"
           onClick={send}
           className="p-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
         >

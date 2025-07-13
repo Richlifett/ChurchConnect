@@ -19,7 +19,10 @@ export function VideoConference() {
   const [showBiblePanel, setShowBiblePanel] = useState(false);
   const [showVideoPanel, setShowVideoPanel] = useState(false);
   const [showChatPanel, setShowChatPanel] = useState(false);
-  const [chatRecipient, setChatRecipient] = useState<string | null>(null);
+  const [chatRecipient, setChatRecipient] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -315,7 +318,7 @@ export function VideoConference() {
               <ParticipantsList
                 participants={allParticipants}
                 onParticipantClick={(p) => {
-                  setChatRecipient(p.name);
+                  setChatRecipient({ id: p.id, name: p.name });
                   setShowChatPanel(true);
                   setShowParticipants(false);
                 }}
@@ -358,7 +361,8 @@ export function VideoConference() {
 
             {showChatPanel && (
               <ChatPanel
-                recipient={chatRecipient || undefined}
+                participants={allParticipants}
+                initialRecipient={chatRecipient || undefined}
                 onClose={() => {
                   setShowChatPanel(false);
                   setChatRecipient(null);
