@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bible translation="esv" name="English Standard Version">
+  <book name="Genesis" chapters="50">
+    <chapter number="1">
+      <verse number="1">In the beginning, God created the heavens and the earth.</verse>
+      <verse number="2">The earth was without form and void, and darkness was over the face of the deep. And the Spirit of God was hovering over the face of the waters.</verse>
+      <verse number="3">And God said, "Let there be light," and there was light.</verse>
+    </chapter>
+  </book>
+  <book name="John" chapters="21">
+    <chapter number="3">
+      <verse number="1">Now there was a man of the Pharisees named Nicodemus, a ruler of the Jews.</verse>
+      <verse number="2">This man came to Jesus by night and said to him, "Rabbi, we know that you are a teacher come from God, for no one can do these signs that you do unless God is with him."</verse>
+      <verse number="3">Jesus answered him, "Truly, truly, I say to you, unless one is born again he cannot see the kingdom of God."</verse>
+      <verse number="16">For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.</verse>
+      <verse number="17">For God did not send his Son into the world to condemn the world, but in order that the world might be saved through him.</verse>
+    </chapter>
+  </book>
+  <book name="Psalms" chapters="150">
+    <chapter number="23">
+      <verse number="1">The LORD is my shepherd; I shall not want.</verse>
+      <verse number="2">He makes me lie down in green pastures. He leads me beside still waters.</verse>
+      <verse number="3">He restores my soul. He leads me in paths of righteousness for his name's sake.</verse>
+      <verse number="4">Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me.</verse>
+      <verse number="5">You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows.</verse>
+      <verse number="6">Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the LORD forever.</verse>
+    </chapter>
+  </book>
+  <book name="Matthew" chapters="28">
+    <chapter number="5">
+      <verse number="3">Blessed are the poor in spirit, for theirs is the kingdom of heaven.</verse>
+      <verse number="4">Blessed are those who mourn, for they shall be comforted.</verse>
+      <verse number="5">Blessed are the meek, for they shall inherit the earth.</verse>
+      <verse number="6">Blessed are those who hunger and thirst for righteousness, for they shall be satisfied.</verse>
+      <verse number="7">Blessed are the merciful, for they shall receive mercy.</verse>
+      <verse number="8">Blessed are the pure in heart, for they shall see God.</verse>
+      <verse number="9">Blessed are the peacemakers, for they shall be called sons of God.</verse>
+      <verse number="14">You are the light of the world. A city set on a hill cannot be hidden.</verse>
+      <verse number="16">In the same way, let your light shine before others, so that they may see your good works and give glory to your Father who is in heaven.</verse>
+    </chapter>
+  </book>
+</bible>
