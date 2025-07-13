@@ -38,8 +38,10 @@ const io = new Server(3001, { cors: { origin: '*' } });
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
-  socket.on('private-message', ({ targetId, ...msg }) => {
-    socket.to(targetId).emit('private-message', msg);
+  socket.on('privateMessage', ({ targetId, ...msg }) => {
+    // `targetId` should be the socket.id of the recipient
+    // Only the matching client will receive this event
+    socket.to(targetId).emit('privateMessage', msg);
   });
 
   socket.on('message', (msg) => io.emit('message', msg));
@@ -47,9 +49,12 @@ io.on('connection', (socket) => {
 SERVER
 ```
 
-The server prints each participant's `socket.id` when they connect. Use these IDs
-to target private messages. You can also read your own ID on the client via the
-`socket.id` property of the Socket.IO client instance.
+The server prints each participant's `socket.id` when they connect. You can read
+your own ID via `socket.id` on the client. When a client emits a
+`privateMessage` event it should include `targetId` with the recipient's
+`socket.id`. The server then forwards the payload using
+`socket.to(targetId).emit('privateMessage', msg)` so only that client receives
+it.
 
 To test private chats:
 
@@ -59,13 +64,19 @@ To test private chats:
 
    ```js
    const { chatService } = await import('/src/services/chat');
-   chatService['socket']?.emit('private-message', {
-     targetId: '<other-id>',
-     id: Date.now().toString(),
-     sender: 'You',
-     text: 'Hello privately',
-     timestamp: new Date()
-   });
+  // Send a private message
+  chatService['socket']?.emit('privateMessage', {
+    targetId: '<other-id>',
+    id: Date.now().toString(),
+    sender: 'You',
+    text: 'Hello privately',
+    timestamp: new Date()
+  });
+
+  // Listen for incoming private messages
+  chatService['socket']?.on('privateMessage', (msg) => {
+    console.log('Private:', msg);
+  });
    ```
 
 The message only appears in the tab whose ID matches `targetId`.
