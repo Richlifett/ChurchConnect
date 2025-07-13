@@ -1,4 +1,4 @@
-import Peer from 'simple-peer';
+import Peer, { SignalData } from 'simple-peer';
 
 export interface PeerConnection {
   id: string;
@@ -122,7 +122,7 @@ class WebRTCService {
     }
   }
 
-  signal(peerId: string, signalData: any) {
+  signal(peerId: string, signalData: SignalData) {
     const peerConnection = this.peers.get(peerId);
     if (peerConnection) {
       peerConnection.peer.signal(signalData);
@@ -161,7 +161,7 @@ class WebRTCService {
     for (const peerConnection of this.peers.values()) {
       try {
         // Check if peer connection exists and has getSenders method
-        const pc = (peerConnection.peer as any)._pc;
+        const pc = (peerConnection.peer as unknown as { _pc?: RTCPeerConnection })._pc;
         if (!pc || typeof pc.getSenders !== 'function') continue;
         
         const sender = pc.getSenders().find(
@@ -248,7 +248,7 @@ class WebRTCService {
   }
 
   // Simulate joining a meeting (in a real app, this would connect to a signaling server)
-  async simulateJoinMeeting(meetingId: string): Promise<void> {
+  async simulateJoinMeeting(): Promise<void> {
     try {
       // Simulate other participants
       const simulatedPeers = ['peer1', 'peer2', 'peer3'];

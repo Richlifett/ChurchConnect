@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, Plus, Video, Book, Heart, Settings } from 'lucide-react';
+import { Calendar, Users, Plus, Video, Book, Heart } from 'lucide-react';
 import {
   format,
   addDays,
@@ -169,7 +169,7 @@ export function SchedulingPanel() {
       recurringSeriesId: string;
     }): Meeting[] => {
       const meetings: Meeting[] = [];
-      let currentDate = new Date(config.startDate);
+      const currentDate = new Date(config.startDate);
       let count = 0;
       const maxOccurrences = config.endType === 'occurrences' ? config.occurrences! : 100; // Limit to 100 if no end
       
@@ -358,7 +358,11 @@ export function SchedulingPanel() {
                         />
                         <select
                           value={frequency}
-                          onChange={(e) => setFrequency(e.target.value as any)}
+                          onChange={(e) =>
+                            setFrequency(
+                              e.target.value as 'daily' | 'weekly' | 'monthly'
+                            )
+                          }
                           className="flex-1 px-2 py-1 border border-gray-300 rounded"
                         >
                           <option value="daily">Day(s)</option>
@@ -404,7 +408,11 @@ export function SchedulingPanel() {
                           name="endType"
                           value="never"
                           checked={endType === 'never'}
-                          onChange={(e) => setEndType(e.target.value as any)}
+                          onChange={(e) =>
+                            setEndType(
+                              e.target.value as 'never' | 'date' | 'occurrences'
+                            )
+                          }
                           className="mr-2"
                         />
                         <span className="text-sm">Never</span>
@@ -416,7 +424,11 @@ export function SchedulingPanel() {
                           name="endType"
                           value="date"
                           checked={endType === 'date'}
-                          onChange={(e) => setEndType(e.target.value as any)}
+                          onChange={(e) =>
+                            setEndType(
+                              e.target.value as 'never' | 'date' | 'occurrences'
+                            )
+                          }
                           className="mr-2"
                         />
                         <span className="text-sm">On</span>
@@ -435,7 +447,11 @@ export function SchedulingPanel() {
                           name="endType"
                           value="occurrences"
                           checked={endType === 'occurrences'}
-                          onChange={(e) => setEndType(e.target.value as any)}
+                          onChange={(e) =>
+                            setEndType(
+                              e.target.value as 'never' | 'date' | 'occurrences'
+                            )
+                          }
                           className="mr-2"
                         />
                         <span className="text-sm">After</span>

@@ -7,11 +7,13 @@ class ChatService {
 
   connect(meetingId: string) {
     this.socket = io('http://localhost:3001', { query: { meetingId } });
-    const handler = (data: ChatMessage) => {
+    const handler = (
+      data: ChatMessage & { timestamp: string; recipientId?: string | null }
+    ) => {
       const msg: ChatMessage = {
         ...data,
-        timestamp: new Date((data as any).timestamp),
-        recipientId: (data as any).recipientId ?? null
+        timestamp: new Date(data.timestamp),
+        recipientId: data.recipientId ?? null
       };
       this.onMessage?.(msg);
     };

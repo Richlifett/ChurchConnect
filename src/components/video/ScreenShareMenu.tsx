@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Monitor, MonitorSpeaker, Smartphone, Book, X } from 'lucide-react';
 
 interface ScreenShareMenuProps {

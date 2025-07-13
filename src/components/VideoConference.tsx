@@ -26,7 +26,7 @@ export function VideoConference() {
 
   useEffect(() => {
     // Set up WebRTC event handlers
-    webrtcService.onStreamReceived = (peerId: string, stream: MediaStream) => {
+    webrtcService.onStreamReceived = (peerId: string) => {
       // Update participant with stream
       console.log('Received stream from peer:', peerId);
     };
@@ -72,7 +72,7 @@ export function VideoConference() {
       chatService.connect(meeting.id);
 
       // Simulate joining WebRTC meeting
-      await webrtcService.simulateJoinMeeting(meeting.id);
+      await webrtcService.simulateJoinMeeting();
       
     } catch (error) {
       console.error('Failed to join meeting:', error);
@@ -93,12 +93,12 @@ export function VideoConference() {
   };
 
   const handleToggleVideo = async () => {
-    const isVideoOn = await webrtcService.toggleVideo();
+    await webrtcService.toggleVideo();
     dispatch({ type: 'TOGGLE_VIDEO' });
   };
 
   const handleToggleMute = async () => {
-    const isAudioOn = await webrtcService.toggleAudio();
+    await webrtcService.toggleAudio();
     dispatch({ type: 'TOGGLE_MUTE' });
   };
 
